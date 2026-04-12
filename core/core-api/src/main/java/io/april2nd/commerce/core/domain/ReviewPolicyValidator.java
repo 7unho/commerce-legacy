@@ -6,6 +6,7 @@ import io.april2nd.commerce.core.enums.ReviewTargetType;
 import io.april2nd.commerce.core.support.error.CoreException;
 import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.OrderItemRepository;
+import io.april2nd.commerce.storage.db.core.ReviewEntity;
 import io.april2nd.commerce.storage.db.core.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -40,5 +41,12 @@ public class ReviewPolicyValidator {
             );
         }
         throw new UnsupportedOperationException();
+    }
+
+    public void validateUpdate(User user, Long reviewId) {
+        ReviewEntity review = reviewRepository.findByIdAndUserId(reviewId, user.id())
+                .orElseThrow(() -> new CoreException(ErrorType.REVIEW_HAS_NOT_ORDER));
+
+        if (review.getCreatedAt().plusDays(7).isBefore(LocalDateTime.now())) throw new CoreException(ErrorType.REVIEW_UPDATE_EXPIRED);
     }
 }

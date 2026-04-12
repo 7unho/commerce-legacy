@@ -38,4 +38,23 @@ public class PointHandler {
                 )
         );
     }
+
+    @Transactional
+    public void deduct(User user, PointType type, Long targetId, BigDecimal amount) {
+        if (amount == BigDecimal.ZERO) return;
+
+        // NOTE: 모든 유저는 가입 시 Point 테이블이 생성됨
+        PointBalanceEntity balance = pointBalanceRepository.findByUserId(user.id())
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+        balance.apply(amount.negate());
+        pointHistoryRepository.save(
+                new PointHistoryEntity(
+                        user.id(),
+                        type,
+                        targetId,
+                        amount.negate(),
+                        balance.getBalance()
+                )
+        );
+    }
 }
