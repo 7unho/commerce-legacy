@@ -46,4 +46,12 @@ public class ReviewController {
         reviewService.updateReview(user, reviewId, request.toContent());
         return ApiResponse.success();
     }
+
+    @DeleteMapping("/v1/reviews/{reviewId}")
+    ApiResponse<Void> deleteReview(
+            User user,
+            @PathVariable Long reviewId) {
+        reviewService.removeReview(user, reviewId);
+        return ApiResponse.success();
+    }
 }

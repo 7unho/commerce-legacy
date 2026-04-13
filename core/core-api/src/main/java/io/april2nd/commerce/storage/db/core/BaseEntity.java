@@ -25,7 +25,7 @@ public class BaseEntity {
     @UpdateTimestamp
     private LocalDateTime updatedAt = LocalDateTime.MIN;
 
-    void active() {
+    public void active() {
         status = EntityStatus.ACTIVE;
     }
 

@@ -1,7 +1,10 @@
 package io.april2nd.commerce.core.domain;
 
+import io.april2nd.commerce.core.support.error.CoreException;
+import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.ReviewEntity;
 import io.april2nd.commerce.storage.db.core.ReviewRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,5 +25,21 @@ public class ReviewManager {
                 )
         );
         return saved.getId();
+    }
+
+    @Transactional
+    public Long update(User user, Long reviewId, ReviewContent content) {
+        ReviewEntity found = reviewRepository.findByIdAndUserId(reviewId, user.id())
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+        found.updateContent(content.rate(), content.content());
+        return found.getId();
+    }
+
+    @Transactional
+    public Long delete(User user, Long reviewId) {
+        ReviewEntity found = reviewRepository.findByIdAndUserId(reviewId, user.id())
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+        found.deleted();
+        return found.getId();
     }
 }

@@ -26,11 +26,17 @@ public class ReviewService {
         ReviewKey reviewKey = reviewPolicyValidator.validateNew(user, target);
         Long reviewId = reviewManager.add(reviewKey, target, content);
         pointHandler.earn(user, PointType.REVIEW, reviewId, PointAmount.REVIEW);
-
         return reviewId;
     }
 
     public Long updateReview(User user, Long reviewId, ReviewContent content) {
-        return null;
+        reviewPolicyValidator.validateUpdate(user, reviewId);
+        return reviewManager.update(user, reviewId, content);
+    }
+
+    public Long removeReview(User user, Long reviewId) {
+        Long deletedReviewId = reviewManager.delete(user, reviewId);
+        pointHandler.deduct(user, PointType.REVIEW, deletedReviewId, PointAmount.REVIEW);
+        return deletedReviewId;
     }
 }
