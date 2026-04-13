@@ -1,4 +1,4 @@
-package io.april2nd.commerce.core.support.response;
+package io.april2nd.commerce.core.api.controller.v1.response;
 
 import io.april2nd.commerce.core.domain.Coupon;
 import io.april2nd.commerce.core.enums.CouponType;

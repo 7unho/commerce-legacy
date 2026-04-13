@@ -6,8 +6,8 @@ import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import io.april2nd.commerce.core.support.response.PageResponse;
-import io.april2nd.commerce.core.support.response.ProductDetailResponse;
-import io.april2nd.commerce.core.support.response.ProductResponse;
+import io.april2nd.commerce.core.api.controller.v1.response.ProductDetailResponse;
+import io.april2nd.commerce.core.api.controller.v1.response.ProductResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,7 +28,7 @@ public class ProductController {
             @RequestParam Integer offset,
             @RequestParam Integer limit) {
         Page<Product> result = productService.findProducts(categoryId, new OffsetLimit(offset, limit));
-        return ApiResponse.success(new PageResponse(ProductResponse.of(result.content()), result.hasNext()));
+        return ApiResponse.success(new PageResponse<>(ProductResponse.of(result.content()), result.hasNext()));
     }
 
     @GetMapping("/v1/products/{productId}")
