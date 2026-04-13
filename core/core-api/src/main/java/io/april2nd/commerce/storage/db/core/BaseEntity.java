@@ -33,7 +33,7 @@ public class BaseEntity {
         return status == EntityStatus.ACTIVE;
     }
 
-    void deleted() {
+    public void deleted() {
         status = EntityStatus.DELETED;
     }
 
