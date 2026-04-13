@@ -11,7 +11,7 @@ import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import io.april2nd.commerce.core.support.response.PageResponse;
-import io.april2nd.commerce.core.support.response.ReviewResponse;
+import io.april2nd.commerce.core.api.controller.v1.response.ReviewResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +27,7 @@ public class ReviewController {
             @RequestParam Integer offset,
             @RequestParam Integer limit) {
         Page<Review> page = reviewService.findReviews(new ReviewTarget(targetType, targetId), new OffsetLimit(offset, limit));
-        return ApiResponse.success(new PageResponse(ReviewResponse.of(page.content()), page.hasNext()));
+        return ApiResponse.success(new PageResponse<>(ReviewResponse.of(page.content()), page.hasNext()));
     }
 
     @PostMapping("/v1/reviews")
