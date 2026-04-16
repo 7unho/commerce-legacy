@@ -12,12 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -50,8 +50,8 @@ public class OwnedCouponService {
                         .map(it -> it.getCouponId())
                         .collect(Collectors.toSet())).stream()
                 .collect(Collectors.toMap(
-                        it -> it.getId(),
-                        it -> it
+                        CouponEntity::getId,
+                        Function.identity()
                 ));
 
         return ownedCoupons.stream()
@@ -69,6 +69,35 @@ public class OwnedCouponService {
                                 )
                         )
                 )
+                .collect(Collectors.toList());
+    }
+
+    public List<OwnedCoupon> getOwnedCouponsForCheckout(User user, Collection<Long> productIds) {
+        if (productIds.isEmpty()) return Collections.emptyList();
+
+        Map<Long, CouponEntity> applicableCouponMap = couponRepository.findApplicableCouponIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        CouponEntity::getId,
+                        Function.identity()
+                ));
+        if (applicableCouponMap.isEmpty()) return Collections.emptyList();
+
+        List<OwnedCouponEntity> ownedCoupons = ownedCouponRepository.findOwnedCouponIds(user.id(), applicableCouponMap.keySet(), LocalDateTime.now());
+        if (ownedCoupons.isEmpty()) return Collections.emptyList();
+
+        return ownedCoupons.stream()
+                .map(it -> new OwnedCoupon(
+                        it.getId(),
+                        it.getUserId(),
+                        it.getState(),
+                        new Coupon(
+                                applicableCouponMap.get(it.getCouponId()).getId(),
+                                applicableCouponMap.get(it.getCouponId()).getName(),
+                                applicableCouponMap.get(it.getCouponId()).getType(),
+                                applicableCouponMap.get(it.getCouponId()).getDiscount(),
+                                applicableCouponMap.get(it.getCouponId()).getExpiredAt()
+                        )
+                ))
                 .collect(Collectors.toList());
     }
 }
