@@ -3,9 +3,7 @@ package io.april2nd.commerce.storage.db.core;
 import io.april2nd.commerce.core.enums.PaymentMethod;
 import io.april2nd.commerce.core.enums.PaymentState;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,6 +39,7 @@ public class PaymentEntity extends BaseEntity {
 
     private LocalDateTime paidAt;
 
+    @Builder
     public PaymentEntity(
             Long userId,
             Long orderId,
