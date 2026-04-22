@@ -30,3 +30,5 @@ pluginManagement {
 }
 
 include("core:core-api")
+include("core:core-enum")
+include("storage")
