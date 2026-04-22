@@ -39,7 +39,7 @@ public class ReviewManager {
     public Long delete(User user, Long reviewId) {
         ReviewEntity found = reviewRepository.findByIdAndUserId(reviewId, user.id())
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
-        found.deleted();
+        found.delete();
         return found.getId();
     }
 }

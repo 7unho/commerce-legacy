@@ -92,7 +92,7 @@ public class QnAService {
         QuestionEntity found = questionRepository.findByIdAndUserId(questionsId, user.id())
                 .filter(QuestionEntity::isActive)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
-        found.deleted();
+        found.delete();
         return found.getId();
     }
 }
