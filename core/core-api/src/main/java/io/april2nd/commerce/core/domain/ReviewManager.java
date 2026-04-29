@@ -4,15 +4,16 @@ import io.april2nd.commerce.core.support.error.CoreException;
 import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.ReviewEntity;
 import io.april2nd.commerce.storage.db.core.ReviewRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
 public class ReviewManager {
-    private ReviewRepository reviewRepository;
+    private final ReviewRepository reviewRepository;
 
+    @Transactional
     public Long add(ReviewKey reviewKey, ReviewTarget target, ReviewContent content) {
         ReviewEntity saved = reviewRepository.save(
                 new ReviewEntity(
