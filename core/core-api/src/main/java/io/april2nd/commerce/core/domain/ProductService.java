@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
-    private ProductFinder productFinder;
+    private final ProductFinder productFinder;
 
     public Page<Product> findProducts(Long categoryId, OffsetLimit offsetLimit) {
         return productFinder.findByCategory(categoryId, offsetLimit);

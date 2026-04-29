@@ -1,10 +1,10 @@
 package io.april2nd.commerce.core.api.controller.v1;
 
+import io.april2nd.commerce.core.api.assembler.CartAssembler;
 import io.april2nd.commerce.core.api.controller.v1.request.AddCartItemRequest;
 import io.april2nd.commerce.core.api.controller.v1.request.ModifyCartItemRequest;
 import io.april2nd.commerce.core.api.controller.v1.response.CartResponse;
 import io.april2nd.commerce.core.domain.Cart;
-import io.april2nd.commerce.core.domain.CartService;
 import io.april2nd.commerce.core.domain.User;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequiredArgsConstructor
 public class CartController {
-    private CartService cartService;
+    private final CartAssembler cartAssembler;
 
     @GetMapping("/v1/cart")
     ApiResponse<CartResponse> getCart(User user) {
-        Cart cart = cartService.getCart(user);
+        Cart cart = cartAssembler.getCart(user);
         return ApiResponse.success(
                 new CartResponse(
                         cart.items()
@@ -34,7 +34,7 @@ public class CartController {
     ApiResponse<Void> addCartItem(
             User user,
             @RequestBody AddCartItemRequest request) {
-        cartService.addCartItem(user, request.toAddCartItem());
+        cartAssembler.addCartItem(user, request);
         return ApiResponse.success();
     }
 
@@ -43,7 +43,7 @@ public class CartController {
             User user,
             @PathVariable Long cartItemId,
             @RequestBody ModifyCartItemRequest request) {
-        cartService.modifyCartItem(user, request.toModifyCartItem(cartItemId));
+        cartAssembler.modifyCartItem(user, cartItemId, request);
         return ApiResponse.success();
     }
 
@@ -51,7 +51,7 @@ public class CartController {
     ApiResponse<Void> deleteCartItem(
             User user,
             @PathVariable Long cartItemId) {
-        cartService.deleteCartItem(user, cartItemId);
+        cartAssembler.deleteCartItem(user, cartItemId);
         return ApiResponse.success();
     }
 }

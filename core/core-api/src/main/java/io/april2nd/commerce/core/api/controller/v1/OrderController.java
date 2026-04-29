@@ -1,5 +1,6 @@
 package io.april2nd.commerce.core.api.controller.v1;
 
+import io.april2nd.commerce.core.api.assembler.OrderAssembler;
 import io.april2nd.commerce.core.api.controller.v1.request.CreateOrderFromCartRequest;
 import io.april2nd.commerce.core.api.controller.v1.request.CreateOrderRequest;
 import io.april2nd.commerce.core.api.controller.v1.response.CreateOrderResponse;
@@ -7,27 +8,22 @@ import io.april2nd.commerce.core.api.controller.v1.response.OrderCheckoutRespons
 import io.april2nd.commerce.core.api.controller.v1.response.OrderListResponse;
 import io.april2nd.commerce.core.api.controller.v1.response.OrderResponse;
 import io.april2nd.commerce.core.domain.*;
-import io.april2nd.commerce.core.enums.OrderState;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
 public class OrderController {
-    private OrderService orderService;
-    private CartService cartService;
-    private OwnedCouponService ownedCouponService;
-    private PointService pointService;
+    private final OrderAssembler orderAssembler;
 
     @PostMapping("/v1/orders")
     ApiResponse<CreateOrderResponse> create(
             User user,
             @RequestBody CreateOrderRequest request) {
-        String key = orderService.create(user, request.toNewOrder(user));
+        String key = orderAssembler.create(user, request);
 
         return ApiResponse.success(new CreateOrderResponse(key));
     }
@@ -36,11 +32,7 @@ public class OrderController {
     ApiResponse<CreateOrderResponse> createFromCart(
             User user,
             @RequestBody CreateOrderFromCartRequest request) {
-        Cart cart = cartService.getCart(user);
-        String key = orderService.create(
-                user,
-                cart.toNewOrder(request.cartItemIds())
-        );
+        String key = orderAssembler.createFromCart(user, request);
 
         return ApiResponse.success(new CreateOrderResponse(key));
     }
@@ -49,21 +41,12 @@ public class OrderController {
     ApiResponse<OrderCheckoutResponse> findOrderForCheckout(
             User user,
             @PathVariable String orderKey) {
-        Order order = orderService.getOrder(user, orderKey, OrderState.CREATED);
-        List<OwnedCoupon> ownedCoupons = ownedCouponService.getOwnedCouponsForCheckout(
-                user,
-                order.items().stream()
-                        .map(OrderItem::productId)
-                        .collect(Collectors.toList())
-        );
-        PointBalance pointBalance = pointService.balance(user);
-
-        return ApiResponse.success(OrderCheckoutResponse.of(order, ownedCoupons, pointBalance));
+        return ApiResponse.success(orderAssembler.findOrderForCheckout(user, orderKey));
     }
 
     @GetMapping("/v1/orders")
     ApiResponse<List<OrderListResponse>> getOrders(User user) {
-        List<OrderSummary> orders = orderService.getOrders(user);
+        List<OrderSummary> orders = orderAssembler.getOrders(user);
         return ApiResponse.success(OrderListResponse.of(orders));
     }
 
@@ -71,7 +54,7 @@ public class OrderController {
     ApiResponse<OrderResponse> getOrder(
             User user,
             @PathVariable String orderKey) {
-        Order order = orderService.getOrder(user, orderKey, OrderState.PAID);
+        Order order = orderAssembler.getOrder(user, orderKey);
         return ApiResponse.success(OrderResponse.of(order));
     }
 }

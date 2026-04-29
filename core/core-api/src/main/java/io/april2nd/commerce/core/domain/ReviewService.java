@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
-    private ReviewFinder reviewFinder;
-    private ReviewManager reviewManager;
-    private ReviewPolicyValidator reviewPolicyValidator;
-    private PointHandler pointHandler;
+    private final ReviewFinder reviewFinder;
+    private final ReviewManager reviewManager;
+    private final ReviewPolicyValidator reviewPolicyValidator;
+    private final PointHandler pointHandler;
 
     public RateSummary findRateSummary(ReviewTarget target) {
         return reviewFinder.findRateSummary(target);
