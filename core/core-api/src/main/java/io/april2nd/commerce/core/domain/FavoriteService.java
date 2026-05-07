@@ -5,6 +5,7 @@ import io.april2nd.commerce.core.support.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Map;
 
@@ -26,7 +27,7 @@ public class FavoriteService {
         return favoriteManager.remove(user, productId);
     }
 
-    public Map<Long, Long> getFavoriteCounts(Collection<Long> productIds, Integer days) {
-        return favoriteFinder.findCounts(productIds, days);
+    public Map<Long, Long> recentCount(Collection<Long> productIds, LocalDateTime from) {
+        return favoriteFinder.countByProductIds(productIds, from);
     }
 }

@@ -67,17 +67,16 @@ public class OrderFinder {
                 .collect(Collectors.toList());
     }
 
-    public Map<Long, Long> findOrderCounts(Collection<Long> productIds, Integer days) {
-        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+    public Map<Long, Long> countOrdersByProductIds(Collection<Long> productIds, LocalDateTime from) {
         return orderItemRepository.findCountsByProductIdsAndOrderStateAndStatusAndCreatedAtAfter(
                         productIds,
                         OrderState.PAID,
                         EntityStatus.ACTIVE,
-                        fromDate
+                        from
                 ).stream()
                 .collect(Collectors.toMap(
-                        OrderCountProjection::getProductId,
-                        OrderCountProjection::getCount
+                        TargetCountProjection::getProductId,
+                        TargetCountProjection::getCount
                 ));
     }
 }

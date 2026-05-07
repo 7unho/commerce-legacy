@@ -21,13 +21,13 @@ public interface FavoriteRepository extends JpaRepository<FavoriteEntity, Long> 
             FROM FavoriteEntity f
             WHERE f.productId IN :productIds
               AND f.status = :status
-              AND f.favoritedAt >= :fromDate
+              AND f.favoritedAt >= :from
             GROUP BY f.productId
             """
     )
-    List<FavoriteCountProjection> findCountsByProductIdsAndStatusAndFavoritedAtAfter(
+    List<TargetCountProjection> findCountsByProductIdsAndStatusAndFavoritedAtAfter(
             Collection<Long> productIds,
             EntityStatus status,
-            LocalDateTime fromDate
+            LocalDateTime from
     );
 }

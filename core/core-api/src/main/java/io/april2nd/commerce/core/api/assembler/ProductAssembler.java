@@ -9,6 +9,7 @@ import io.april2nd.commerce.core.support.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +28,9 @@ public class ProductAssembler {
         List<Product> products = productPage.content();
         List<Long> productIds = products.stream().map(Product::id).toList();
 
-        Map<Long, Long> favoriteCounts = favoriteService.getFavoriteCounts(productIds, ProductPolicy.FAVORITE_COUNT_DAYS.getDays());
-        Map<Long, Long> orderCounts = orderService.getOrderCounts(productIds, ProductPolicy.ORDER_COUNT_DAYS.getDays());
+        LocalDateTime now = LocalDateTime.now();
+        Map<Long, Long> favoriteCounts = favoriteService.recentCount(productIds, now.minusDays(ProductAssembleSpec.FAVORITE_COUNT_DAYS.getDays()));
+        Map<Long, Long> orderCounts = orderService.recentCount(productIds, now.minusDays(ProductAssembleSpec.ORDER_COUNT_DAYS.getDays()));
 
         List<ProductResponse> responses = ProductResponse.of(products, favoriteCounts, orderCounts);
         return new Page<>(responses, productPage.hasNext());
