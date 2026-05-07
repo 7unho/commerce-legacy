@@ -38,10 +38,11 @@ public class ProductAssembler {
 
     public ProductDetailResponse findProduct(Long productId) {
         Product product = productService.findProduct(productId);
+        List<ProductOption> options = productService.findOptions(productId);
         List<ProductSection> sections = productSectionService.findSections(productId);
         RateSummary rateSummary = reviewService.findRateSummary(new ReviewTarget(ReviewTargetType.PRODUCT, productId));
         List<Coupon> coupons = couponService.getCouponsForProducts(List.of(productId));
-        
-        return new ProductDetailResponse(product, sections, rateSummary, coupons);
+
+        return new ProductDetailResponse(product, sections, rateSummary, coupons, options);
     }
 }
