@@ -17,22 +17,6 @@ public record ProductResponse(
         Long favoriteCount,
         Long orderCount
 ) {
-    public static List<ProductResponse> of(List<Product> products) {
-        return products.stream()
-                .map(it -> new ProductResponse(
-                        it.name(),
-                        it.thumbnailUrl(),
-                        it.description(),
-                        it.shortDescription(),
-                        it.price().costPrice(),
-                        it.price().salesPrice(),
-                        it.price().discountedPrice(),
-                        0L,
-                        0L
-                ))
-                .toList();
-    }
-
     public static List<ProductResponse> of(
             List<Product> products,
             Map<Long, Long> favoriteCounts,

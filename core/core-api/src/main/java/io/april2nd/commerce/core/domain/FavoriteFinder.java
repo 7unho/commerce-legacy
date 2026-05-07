@@ -3,9 +3,9 @@ package io.april2nd.commerce.core.domain;
 import io.april2nd.commerce.core.enums.EntityStatus;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
-import io.april2nd.commerce.storage.db.core.FavoriteCountProjection;
 import io.april2nd.commerce.storage.db.core.FavoriteEntity;
 import io.april2nd.commerce.storage.db.core.FavoriteRepository;
+import io.april2nd.commerce.storage.db.core.TargetCountProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class FavoriteFinder {
     private final FavoriteRepository favoriteRepository;
 
     public Page<Favorite> findFavorites(User user, OffsetLimit offsetLimit) {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(ProductPolicy.FAVORITE_RETENTION_DAYS.getDays());
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
         Slice<FavoriteEntity> result = favoriteRepository.findByUserIdAndStatusAndUpdatedAtAfter(
                 user.id(),
                 EntityStatus.ACTIVE,
@@ -42,16 +42,15 @@ public class FavoriteFinder {
         );
     }
 
-    public Map<Long, Long> findCounts(Collection<Long> productIds, Integer days) {
-        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+    public Map<Long, Long> countByProductIds(Collection<Long> productIds, LocalDateTime from) {
         return favoriteRepository.findCountsByProductIdsAndStatusAndFavoritedAtAfter(
                         productIds,
                         EntityStatus.ACTIVE,
-                        fromDate
+                        from
                 ).stream()
                 .collect(Collectors.toMap(
-                        FavoriteCountProjection::getProductId,
-                        FavoriteCountProjection::getCount
+                        TargetCountProjection::getProductId,
+                        TargetCountProjection::getCount
                 ));
     }
 }

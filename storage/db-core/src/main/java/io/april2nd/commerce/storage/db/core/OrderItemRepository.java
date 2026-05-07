@@ -46,7 +46,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItemEntity, Long
             GROUP BY item.productId
             """
     )
-    List<OrderCountProjection> findCountsByProductIdsAndOrderStateAndStatusAndCreatedAtAfter(
+    List<TargetCountProjection> findCountsByProductIdsAndOrderStateAndStatusAndCreatedAtAfter(
             Collection<Long> productIds,
             OrderState state,
             EntityStatus status,

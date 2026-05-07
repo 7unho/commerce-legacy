@@ -4,6 +4,7 @@ import io.april2nd.commerce.core.enums.OrderState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class OrderService {
         return orderFinder.getOrders(user);
     }
 
-    public Map<Long, Long> getOrderCounts(Collection<Long> productIds, Integer days) {
-        return orderFinder.findOrderCounts(productIds, days);
+    public Map<Long, Long> recentCount(Collection<Long> productIds, LocalDateTime from) {
+        return orderFinder.countOrdersByProductIds(productIds, from);
     }
 }
