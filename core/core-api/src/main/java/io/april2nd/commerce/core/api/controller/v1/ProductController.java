@@ -24,8 +24,8 @@ public class ProductController {
             @RequestParam Long categoryId,
             @RequestParam Integer offset,
             @RequestParam Integer limit) {
-        Page<Product> result = productAssembler.findProducts(categoryId, new OffsetLimit(offset, limit));
-        return ApiResponse.success(new PageResponse<>(ProductResponse.of(result.content()), result.hasNext()));
+        Page<ProductResponse> result = productAssembler.findProducts(categoryId, new OffsetLimit(offset, limit));
+        return ApiResponse.success(new PageResponse<>(result.content(), result.hasNext()));
     }
 
     @GetMapping("/v1/products/{productId}")

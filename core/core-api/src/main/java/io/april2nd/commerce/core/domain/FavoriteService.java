@@ -5,6 +5,9 @@ import io.april2nd.commerce.core.support.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class FavoriteService {
@@ -21,5 +24,9 @@ public class FavoriteService {
 
     public Long removeFavorite(User user, Long productId) {
         return favoriteManager.remove(user, productId);
+    }
+
+    public Map<Long, Long> getFavoriteCounts(Collection<Long> productIds, Integer days) {
+        return favoriteFinder.findCounts(productIds, days);
     }
 }

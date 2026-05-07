@@ -32,4 +32,24 @@ public interface OrderItemRepository extends JpaRepository<OrderItemEntity, Long
             LocalDateTime fromDate,
             EntityStatus status
     );
+
+    @Query(
+            """
+            SELECT item.productId as productId, SUM(item.quantity) as count
+            FROM OrderItemEntity item
+                JOIN OrderEntity orderEntity ON item.orderId = orderEntity.id
+            WHERE item.productId IN :productIds
+                AND orderEntity.state = :state
+                AND orderEntity.status = :status
+                AND orderEntity.createdAt >= :fromDate
+                AND item.status = :status
+            GROUP BY item.productId
+            """
+    )
+    List<OrderCountProjection> findCountsByProductIdsAndOrderStateAndStatusAndCreatedAtAfter(
+            Collection<Long> productIds,
+            OrderState state,
+            EntityStatus status,
+            LocalDateTime fromDate
+    );
 }
