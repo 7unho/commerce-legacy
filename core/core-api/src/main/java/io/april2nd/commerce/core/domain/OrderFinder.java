@@ -4,15 +4,15 @@ import io.april2nd.commerce.core.enums.EntityStatus;
 import io.april2nd.commerce.core.enums.OrderState;
 import io.april2nd.commerce.core.support.error.CoreException;
 import io.april2nd.commerce.core.support.error.ErrorType;
-import io.april2nd.commerce.storage.db.core.OrderEntity;
-import io.april2nd.commerce.storage.db.core.OrderItemEntity;
-import io.april2nd.commerce.storage.db.core.OrderItemRepository;
-import io.april2nd.commerce.storage.db.core.OrderRepository;
+import io.april2nd.commerce.storage.db.core.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -65,5 +65,19 @@ public class OrderFinder {
                         it.getState()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public Map<Long, Long> findOrderCounts(Collection<Long> productIds, Integer days) {
+        LocalDateTime fromDate = LocalDateTime.now().minusDays(days);
+        return orderItemRepository.findCountsByProductIdsAndOrderStateAndStatusAndCreatedAtAfter(
+                        productIds,
+                        OrderState.PAID,
+                        EntityStatus.ACTIVE,
+                        fromDate
+                ).stream()
+                .collect(Collectors.toMap(
+                        OrderCountProjection::getProductId,
+                        OrderCountProjection::getCount
+                ));
     }
 }

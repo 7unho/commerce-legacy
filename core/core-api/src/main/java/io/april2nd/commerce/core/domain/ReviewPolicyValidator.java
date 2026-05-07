@@ -24,7 +24,7 @@ public class ReviewPolicyValidator {
 
     public ReviewKey validateNew(User user, ReviewTarget target) {
         if (target.type() == ReviewTargetType.PRODUCT) {
-            List<String> reviewKeys = orderItemRepository.findRecentOrderItemsForProduct(user.id(), target.id(), OrderState.PAID, LocalDateTime.now().minusDays(14), EntityStatus.ACTIVE).stream()
+            List<String> reviewKeys = orderItemRepository.findRecentOrderItemsForProduct(user.id(), target.id(), OrderState.PAID, LocalDateTime.now().minusDays(ReviewPolicy.ORDER_RETENTION_DAYS.getDays()), EntityStatus.ACTIVE).stream()
                     .map(it -> "ORDER_ITEM_" + it.getId())
                     .collect(Collectors.toList());
 
@@ -47,6 +47,6 @@ public class ReviewPolicyValidator {
         ReviewEntity review = reviewRepository.findByIdAndUserId(reviewId, user.id())
                 .orElseThrow(() -> new CoreException(ErrorType.REVIEW_HAS_NOT_ORDER));
 
-        if (review.getCreatedAt().plusDays(7).isBefore(LocalDateTime.now())) throw new CoreException(ErrorType.REVIEW_UPDATE_EXPIRED);
+        if (review.getCreatedAt().plusDays(ReviewPolicy.EDITABLE_DAYS.getDays()).isBefore(LocalDateTime.now())) throw new CoreException(ErrorType.REVIEW_UPDATE_EXPIRED);
     }
 }
