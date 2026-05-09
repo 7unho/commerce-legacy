@@ -3,7 +3,6 @@ package io.april2nd.commerce.core.api.controller.v1;
 import io.april2nd.commerce.core.api.assembler.ProductAssembler;
 import io.april2nd.commerce.core.api.controller.v1.response.ProductDetailResponse;
 import io.april2nd.commerce.core.api.controller.v1.response.ProductResponse;
-import io.april2nd.commerce.core.domain.Product;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
 import io.april2nd.commerce.core.support.response.ApiResponse;

@@ -2,6 +2,7 @@ package io.april2nd.commerce.core.api.controller.v1.response;
 
 import io.april2nd.commerce.core.domain.Coupon;
 import io.april2nd.commerce.core.domain.Product;
+import io.april2nd.commerce.core.domain.ProductOption;
 import io.april2nd.commerce.core.domain.ProductSection;
 import io.april2nd.commerce.core.domain.RateSummary;
 
@@ -20,13 +21,15 @@ public record ProductDetailResponse(
         BigDecimal rate,
         Long rateCount,
         List<ProductSectionResponse> sections,
-        List<CouponResponse> coupons
+        List<CouponResponse> coupons,
+        List<ProductOptionResponse> options
 ) {
     public ProductDetailResponse(
             Product product,
             List<ProductSection> sections,
             RateSummary rateSummary,
-            List<Coupon> coupons
+            List<Coupon> coupons,
+            List<ProductOption> options
     ) {
         this(
                 product.name(),
@@ -45,6 +48,10 @@ public record ProductDetailResponse(
                 coupons
                         .stream()
                         .map(CouponResponse::of)
+                        .collect(Collectors.toList()),
+                options
+                        .stream()
+                        .map(ProductOptionResponse::of)
                         .collect(Collectors.toList())
         );
     }
