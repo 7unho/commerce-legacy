@@ -5,15 +5,19 @@ import io.april2nd.commerce.core.domain.ReviewTarget;
 import io.april2nd.commerce.core.enums.ReviewTargetType;
 import io.april2nd.commerce.core.support.error.CoreException;
 import io.april2nd.commerce.core.support.error.ErrorType;
+import io.april2nd.commerce.core.support.file.ImageHandle;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 public record AddReviewRequest(
         Long userId,
         ReviewTargetType targetType,
         Long targetId,
         BigDecimal rate,
-        String content
+        String content,
+        List<Long> images
 ) {
     public ReviewTarget toTarget() {
         return new ReviewTarget(targetType, targetId);
@@ -25,5 +29,13 @@ public record AddReviewRequest(
         if (content.isEmpty()) throw new CoreException(ErrorType.INVALID_REQUEST);
 
         return new ReviewContent(rate, content);
+    }
+
+    public ImageHandle toImageHandle() {
+        List<Long> list = (images != null) ? images : Collections.emptyList();
+
+        if (list.size() > 5) throw new CoreException(ErrorType.INVALID_REQUEST);
+
+        return new ImageHandle(list, Collections.emptyList());
     }
 }

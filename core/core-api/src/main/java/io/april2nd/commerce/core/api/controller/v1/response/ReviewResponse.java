@@ -12,7 +12,8 @@ public record ReviewResponse(
         ReviewTargetType targetType,
         Long targetId,
         BigDecimal rate,
-        String content
+        String content,
+        List<ReviewImageResponse> images
 ) {
     static ReviewResponse of(Review review) {
         return new ReviewResponse(
@@ -20,7 +21,10 @@ public record ReviewResponse(
                 review.target().type(),
                 review.target().id(),
                 review.content().rate(),
-                review.content().content()
+                review.content().content(),
+                review.images().stream()
+                        .map(ReviewImageResponse::of)
+                        .collect(Collectors.toList())
         );
     }
 

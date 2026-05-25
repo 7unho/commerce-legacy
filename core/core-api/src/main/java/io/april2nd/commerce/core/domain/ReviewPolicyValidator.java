@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ReviewPolicyValidator {
-    private OrderItemRepository orderItemRepository;
-    private ReviewRepository reviewRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ReviewRepository reviewRepository;
 
     public ReviewKey validateNew(User user, ReviewTarget target) {
         if (target.type() == ReviewTargetType.PRODUCT) {
