@@ -1,5 +1,6 @@
 package io.april2nd.commerce.core.domain;
 
+import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.support.error.CoreException;
 import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.FavoriteEntity;
@@ -16,8 +17,8 @@ public class FavoriteManager {
     private final FavoriteRepository favoriteRepository;
 
     @Transactional
-    public Long add(User user, Long productId) {
-        FavoriteEntity existing = favoriteRepository.findByUserIdAndProductId(user.id(), productId);
+    public Long add(User user, FavoriteTargetType targetType, Long targetId) {
+        FavoriteEntity existing = favoriteRepository.findByUserIdAndTargetTypeAndTargetId(user.id(), targetType, targetId);
 
         if (existing != null) {
             existing.favorite();
@@ -27,7 +28,8 @@ public class FavoriteManager {
         FavoriteEntity saved = favoriteRepository.save(
                 new FavoriteEntity(
                         user.id(),
-                        productId,
+                        targetType,
+                        targetId,
                         LocalDateTime.now()
                 )
         );
@@ -36,8 +38,8 @@ public class FavoriteManager {
     }
 
     @Transactional
-    public Long remove(User user, Long productId) {
-        FavoriteEntity existing = favoriteRepository.findByUserIdAndProductId(user.id(), productId);
+    public Long remove(User user, FavoriteTargetType targetType, Long targetId) {
+        FavoriteEntity existing = favoriteRepository.findByUserIdAndTargetTypeAndTargetId(user.id(), targetType, targetId);
 
         if (existing == null) throw new CoreException(ErrorType.NOT_FOUND_DATA);
 

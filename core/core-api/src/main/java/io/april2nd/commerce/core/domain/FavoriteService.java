@@ -1,5 +1,6 @@
 package io.april2nd.commerce.core.domain;
 
+import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
 import lombok.RequiredArgsConstructor;
@@ -15,19 +16,19 @@ public class FavoriteService {
     private final FavoriteFinder favoriteFinder;
     private final FavoriteManager favoriteManager;
 
-    public Page<Favorite> findFavorites(User user, OffsetLimit offsetLimit) {
-        return favoriteFinder.findFavorites(user, offsetLimit);
+    public Page<Favorite> findFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
+        return favoriteFinder.findFavorites(user, targetType, offsetLimit);
     }
 
-    public Long addFavorite(User user, Long productId) {
-        return favoriteManager.add(user, productId);
+    public Long addFavorite(User user, FavoriteTargetType targetType, Long targetId) {
+        return favoriteManager.add(user, targetType, targetId);
     }
 
-    public Long removeFavorite(User user, Long productId) {
-        return favoriteManager.remove(user, productId);
+    public Long removeFavorite(User user, FavoriteTargetType targetType, Long targetId) {
+        return favoriteManager.remove(user, targetType, targetId);
     }
 
-    public Map<Long, Long> recentCount(Collection<Long> productIds, LocalDateTime from) {
-        return favoriteFinder.countByProductIds(productIds, from);
+    public Map<Long, Long> recentCount(FavoriteTargetType targetType, Collection<Long> targetIds, LocalDateTime from) {
+        return favoriteFinder.countByTargetIds(targetType, targetIds, from);
     }
 }

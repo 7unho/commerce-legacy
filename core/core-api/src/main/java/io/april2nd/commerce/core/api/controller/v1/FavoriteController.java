@@ -3,8 +3,8 @@ package io.april2nd.commerce.core.api.controller.v1;
 import io.april2nd.commerce.core.api.assembler.FavoriteAssembler;
 import io.april2nd.commerce.core.api.controller.v1.request.ApplyFavoriteRequest;
 import io.april2nd.commerce.core.api.controller.v1.response.FavoriteResponse;
-import io.april2nd.commerce.core.domain.Favorite;
 import io.april2nd.commerce.core.domain.User;
+import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
 import io.april2nd.commerce.core.support.response.ApiResponse;
@@ -20,9 +20,10 @@ public class FavoriteController {
     @GetMapping("/v1/favorites")
     ApiResponse<PageResponse<FavoriteResponse>> getFavorites(
             User user,
+            @RequestParam FavoriteTargetType targetType,
             @RequestParam Integer offset,
             @RequestParam Integer limit) {
-        Page<FavoriteResponse> page = favoriteAssembler.findFavorites(user, new OffsetLimit(offset, limit));
+        Page<FavoriteResponse> page = favoriteAssembler.findFavorites(user, targetType, new OffsetLimit(offset, limit));
         return ApiResponse.success(new PageResponse<>(page.content(), page.hasNext()));
     }
 

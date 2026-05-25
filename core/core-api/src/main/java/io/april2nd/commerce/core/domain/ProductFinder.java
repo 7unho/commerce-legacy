@@ -41,7 +41,8 @@ public class ProductFinder {
                                 it.getCostPrice(),
                                 it.getSalesPrice(),
                                 it.getDiscountedPrice()
-                        )
+                        ),
+                        it.getUpdatedAt()
                 ))
                 .collect(toList());
 
@@ -63,7 +64,8 @@ public class ProductFinder {
                         found.getCostPrice(),
                         found.getSalesPrice(),
                         found.getDiscountedPrice()
-                )
+                ),
+                found.getUpdatedAt()
         );
     }
 
@@ -80,7 +82,8 @@ public class ProductFinder {
                                 it.getCostPrice(),
                                 it.getSalesPrice(),
                                 it.getDiscountedPrice()
-                        )
+                        ),
+                        it.getUpdatedAt()
                 ))
                 .collect(toList());
     }

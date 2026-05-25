@@ -3,6 +3,7 @@ package io.april2nd.commerce.core.api.assembler;
 import io.april2nd.commerce.core.api.controller.v1.response.ProductDetailResponse;
 import io.april2nd.commerce.core.api.controller.v1.response.ProductResponse;
 import io.april2nd.commerce.core.domain.*;
+import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.enums.ReviewTargetType;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
@@ -29,7 +30,7 @@ public class ProductAssembler {
         List<Long> productIds = products.stream().map(Product::id).toList();
 
         LocalDateTime now = LocalDateTime.now();
-        Map<Long, Long> favoriteCounts = favoriteService.recentCount(productIds, now.minusDays(ProductAssembleSpec.FAVORITE_COUNT_DAYS.getDays()));
+        Map<Long, Long> favoriteCounts = favoriteService.recentCount(FavoriteTargetType.PRODUCT, productIds, now.minusDays(ProductAssembleSpec.FAVORITE_COUNT_DAYS.getDays()));
         Map<Long, Long> orderCounts = orderService.recentCount(productIds, now.minusDays(ProductAssembleSpec.ORDER_COUNT_DAYS.getDays()));
 
         List<ProductResponse> responses = ProductResponse.of(products, favoriteCounts, orderCounts);

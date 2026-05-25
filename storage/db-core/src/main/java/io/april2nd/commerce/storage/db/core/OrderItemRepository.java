@@ -35,7 +35,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItemEntity, Long
 
     @Query(
             """
-            SELECT item.productId as productId, SUM(item.quantity) as count
+            SELECT item.productId as targetId, SUM(item.quantity) as count
             FROM OrderItemEntity item
                 JOIN OrderEntity orderEntity ON item.orderId = orderEntity.id
             WHERE item.productId IN :productIds
