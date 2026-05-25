@@ -33,6 +33,7 @@ public enum ErrorType {
     // 리뷰
     REVIEW_HAS_NOT_ORDER(HttpStatus.BAD_REQUEST, ErrorCode.E7000, "리뷰 작성 가능한 주문이 없습니다.", LogLevel.INFO),
     REVIEW_ALREADY_REVIEWED(HttpStatus.BAD_REQUEST, ErrorCode.E7001, "이미 리뷰를 작성한 상품입니다.", LogLevel.INFO),
+    REVIEW_CANNOT_DELETE_ALL_IMAGES(HttpStatus.BAD_REQUEST, ErrorCode.E7003, "이미지 리뷰는 이미지를 모두 삭제할 수 없습니다.", LogLevel.INFO),
     REVIEW_UPDATE_EXPIRED(HttpStatus.BAD_REQUEST, ErrorCode.E7002, "리뷰를 수정 기간이 만료 되었습니다.", LogLevel.INFO);
 
     private final HttpStatus status;
