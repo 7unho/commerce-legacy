@@ -22,8 +22,8 @@ public class FavoriteController {
             User user,
             @RequestParam Integer offset,
             @RequestParam Integer limit) {
-        Page<Favorite> page = favoriteAssembler.findFavorites(user, new OffsetLimit(offset, limit));
-        return ApiResponse.success(new PageResponse<>(FavoriteResponse.of(page.content()), page.hasNext()));
+        Page<FavoriteResponse> page = favoriteAssembler.findFavorites(user, new OffsetLimit(offset, limit));
+        return ApiResponse.success(new PageResponse<>(page.content(), page.hasNext()));
     }
 
     @PostMapping("/v1/favorites")

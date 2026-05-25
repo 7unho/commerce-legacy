@@ -18,9 +18,9 @@ import static java.util.stream.Collectors.toList;
 @Component
 @RequiredArgsConstructor
 public class ProductFinder {
-    private ProductRepository productRepository;
-    private ProductCategoryRepository productCategoryRepository;
-    private ProductSectionRepository productSectionRepository;
+    private final ProductRepository productRepository;
+    private final ProductCategoryRepository productCategoryRepository;
+    private final ProductSectionRepository productSectionRepository;
 
     public Page<Product> findByCategory(Long categoryId, OffsetLimit offsetLimit) {
         Slice<ProductCategoryEntity> categories = productCategoryRepository.findByCategoryIdAndStatus(categoryId, EntityStatus.ACTIVE, offsetLimit.toPageable());
@@ -45,7 +45,7 @@ public class ProductFinder {
                 ))
                 .collect(toList());
 
-        return new Page(products, categories.hasNext());
+        return new Page<>(products, categories.hasNext());
     }
 
     public Product find(Long productId) {
@@ -65,6 +65,24 @@ public class ProductFinder {
                         found.getDiscountedPrice()
                 )
         );
+    }
+
+    public List<Product> findAll(List<Long> productIds) {
+        return productRepository.findAllById(productIds)
+                .stream()
+                .map(it -> new Product(
+                        it.getId(),
+                        it.getName(),
+                        it.getThumbnailUrl(),
+                        it.getDescription(),
+                        it.getShortDescription(),
+                        new Price(
+                                it.getCostPrice(),
+                                it.getSalesPrice(),
+                                it.getDiscountedPrice()
+                        )
+                ))
+                .collect(toList());
     }
 
     public List<ProductSection> findSections(Long productId) {
