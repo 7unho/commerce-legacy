@@ -30,4 +30,5 @@ public enum ErrorCode {
     E7000,
     E7001,
     E7002,
+    E7003,
 }

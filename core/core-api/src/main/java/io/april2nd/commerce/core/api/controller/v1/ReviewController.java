@@ -18,15 +18,17 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 public class ReviewController {
-    private ReviewService reviewService;
+    private final ReviewService reviewService;
 
     @GetMapping("/v1/reviews")
     ApiResponse<PageResponse<ReviewResponse>> getReviews(
             @RequestParam ReviewTargetType targetType,
             @RequestParam Long targetId,
-            @RequestParam Integer offset,
-            @RequestParam Integer limit) {
-        Page<Review> page = reviewService.findReviews(new ReviewTarget(targetType, targetId), new OffsetLimit(offset, limit));
+            @RequestParam int offset,
+            @RequestParam int limit,
+            @RequestParam(required = false, defaultValue = "false") boolean imageOnly
+    ) {
+        Page<Review> page = reviewService.findReviews(new ReviewTarget(targetType, targetId), new OffsetLimit(offset, limit), imageOnly);
         return ApiResponse.success(new PageResponse<>(ReviewResponse.of(page.content()), page.hasNext()));
     }
 
@@ -34,7 +36,7 @@ public class ReviewController {
     ApiResponse<Void> createReview(
             User user,
             @RequestBody AddReviewRequest request) {
-        reviewService.addReview(user, request.toTarget(), request.toContent());
+        reviewService.addReview(user, request.toTarget(), request.toContent(), request.toImageHandle());
         return ApiResponse.success();
     }
 
@@ -43,7 +45,7 @@ public class ReviewController {
             User user,
             @PathVariable Long reviewId,
             @RequestBody UpdateReviewRequest request) {
-        reviewService.updateReview(user, reviewId, request.toContent());
+        reviewService.updateReview(user, reviewId, request.toContent(), request.toImageHandle());
         return ApiResponse.success();
     }
 
