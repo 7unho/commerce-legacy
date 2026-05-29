@@ -13,8 +13,7 @@ import java.util.List;
 
 public interface FavoriteRepository extends JpaRepository<FavoriteEntity, Long> {
     FavoriteEntity findByUserIdAndTargetTypeAndTargetId(Long userId, FavoriteTargetType targetType, Long targetId);
-
-    Slice<FavoriteEntity> findByUserIdAndTargetTypeAndStatusAndUpdatedAtAfter(Long userId, FavoriteTargetType targetType, EntityStatus status, LocalDateTime updatedAtAfter, Pageable pageable);
+    Slice<FavoriteEntity> findByUserIdAndStatusAndTargetTypeAndUpdatedAtAfter(Long userId, FavoriteTargetType type, EntityStatus status, LocalDateTime from, Pageable pageable);
 
     @Query(
             """
@@ -27,7 +26,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteEntity, Long> 
             GROUP BY f.targetId
             """
     )
-    List<TargetCountProjection> findCountsByTargetTypeAndTargetIdsAndStatusAndFavoritedAtAfter(
+    List<TargetCountProjection> countByProductIdsAndStatusAndFavoritedAtAfter(
             FavoriteTargetType targetType,
             Collection<Long> targetIds,
             EntityStatus status,

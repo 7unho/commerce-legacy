@@ -4,6 +4,7 @@ import io.april2nd.commerce.storage.db.core.BrandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,9 @@ import java.util.stream.Collectors;
 public class BrandFinder {
     private final BrandRepository brandRepository;
 
-    public List<Brand> findAll(List<Long> brandIds) {
+    public List<Brand> findByIds(List<Long> brandIds) {
+        if (brandIds.isEmpty()) return Collections.emptyList();
+
         return brandRepository.findAllById(brandIds).stream()
                 .map(it -> new Brand(it.getId(), it.getName(), it.getImageUrl()))
                 .collect(Collectors.toList());

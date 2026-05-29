@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public record FavoriteResponse(
@@ -17,86 +18,71 @@ public record FavoriteResponse(
         FavoriteTargetType targetType,
         Long targetId,
         String targetName,
-        String targetImageUrl,
+        String imageUrl,
+        String productName,
+        String productImageUrl,
+        BigDecimal costPrice,
         BigDecimal salesPrice,
         BigDecimal discountedPrice,
         LocalDateTime favoritedAt,
         Boolean isChanged
 ) {
-    public static FavoriteResponse of(Favorite favorite, Product product) {
-        if (product == null) return of(favorite);
-        return new FavoriteResponse(
-                favorite.id(),
-                favorite.targetType(),
-                favorite.targetId(),
-                product.name(),
-                product.thumbnailUrl(),
-                product.price().salesPrice(),
-                product.price().discountedPrice(),
-                favorite.favoritedAt(),
-                product.updatedAt().isAfter(favorite.favoritedAt())
-        );
+    public FavoriteResponse(Long id, FavoriteTargetType targetType, Long targetId, String targetName, LocalDateTime favoritedAt) {
+        this(id, targetType, targetId, targetName, null, null, null, null, null, null, favoritedAt, false);
     }
 
-    public static FavoriteResponse of(Favorite favorite, Brand brand) {
-        if (brand == null) return of(favorite);
-        return new FavoriteResponse(
-                favorite.id(),
-                favorite.targetType(),
-                favorite.targetId(),
-                brand.name(),
-                brand.imageUrl(),
-                null,
-                null,
-                favorite.favoritedAt(),
-                false
-        );
+    public static List<FavoriteResponse> ofProduct(List<Favorite> favorites, Map<Long, Product> productMap) {
+        return favorites.stream().map(
+                it -> {
+                    Product product = Objects.requireNonNull(productMap.get(it.targetId()));
+
+                    return new FavoriteResponse(
+                            it.id(),
+                            FavoriteTargetType.PRODUCT,
+                            product.id(),
+                            product.name(),
+                            product.thumbnailUrl(),
+                            product.name(),
+                            product.thumbnailUrl(),
+                            product.price().costPrice(),
+                            product.price().salesPrice(),
+                            product.price().discountedPrice(),
+                            it.favoritedAt(),
+                            product.updatedAt().isAfter(it.favoritedAt())
+                    );
+                }
+        ).collect(Collectors.toUnmodifiableList());
     }
 
-    public static FavoriteResponse of(Favorite favorite, Merchant merchant) {
-        if (merchant == null) return of(favorite);
-        return new FavoriteResponse(
-                favorite.id(),
-                favorite.targetType(),
-                favorite.targetId(),
-                merchant.name(),
-                null,
-                null,
-                null,
-                favorite.favoritedAt(),
-                false
-        );
+    public static List<FavoriteResponse> ofBrand(List<Favorite> favorites, Map<Long, Brand> brandMap) {
+        return favorites.stream().map(
+                it -> {
+                    Brand brand = Objects.requireNonNull(brandMap.get(it.targetId()));
+
+                    return new FavoriteResponse(
+                            it.id(),
+                            FavoriteTargetType.BRAND,
+                            brand.id(),
+                            brand.name(),
+                            it.favoritedAt()
+                    );
+                }
+        ).collect(Collectors.toUnmodifiableList());
     }
 
-    public static FavoriteResponse of(Favorite favorite) {
-        return new FavoriteResponse(
-                favorite.id(),
-                favorite.targetType(),
-                favorite.targetId(),
-                "Unknown Name", // TODO: Brand, Merchant 연동 시 수정 필요
-                null,
-                null,
-                null,
-                favorite.favoritedAt(),
-                false
-        );
-    }
+    public static List<FavoriteResponse> ofMerchant(List<Favorite> favorites, Map<Long, Merchant> merchantMap) {
+        return favorites.stream().map(
+                it -> {
+                    Merchant merchant = Objects.requireNonNull(merchantMap.get(it.targetId()));
 
-    public static List<FavoriteResponse> of(List<Favorite> favorites, Map<Long, Product> productMap) {
-        return favorites.stream()
-                .map(it -> of(it, productMap.get(it.targetId())))
-                .collect(Collectors.toUnmodifiableList());
-    }
-
-    public static List<FavoriteResponse> ofBrands(List<Favorite> favorites, Map<Long, Brand> brandMap) {
-        return favorites.stream()
-                .map(it -> of(it, brandMap.get(it.targetId())))
-                .collect(Collectors.toUnmodifiableList());
-    }
-
-    public static List<FavoriteResponse> ofMerchants(List<Favorite> favorites, Map<Long, Merchant> merchantMap) {
-        return favorites.stream()
-                .map(it -> of(it, merchantMap.get(it.targetId())))
-                .collect(Collectors.toUnmodifiableList());
+                    return new FavoriteResponse(
+                            it.id(),
+                            FavoriteTargetType.MERCHANT,
+                            merchant.id(),
+                            merchant.name(),
+                            it.favoritedAt()
+                    );
+                }
+        ).collect(Collectors.toUnmodifiableList());
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ public class FavoriteFinder {
 
     public Page<Favorite> findFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
-        Slice<FavoriteEntity> result = favoriteRepository.findByUserIdAndTargetTypeAndStatusAndUpdatedAtAfter(
+        Slice<FavoriteEntity> result = favoriteRepository.findByUserIdAndStatusAndTargetTypeAndUpdatedAtAfter(
                 user.id(),
                 targetType,
                 EntityStatus.ACTIVE,
@@ -46,7 +47,9 @@ public class FavoriteFinder {
     }
 
     public Map<Long, Long> countByTargetIds(FavoriteTargetType targetType, Collection<Long> targetIds, LocalDateTime from) {
-        return favoriteRepository.findCountsByTargetTypeAndTargetIdsAndStatusAndFavoritedAtAfter(
+        if (targetIds.isEmpty()) return Collections.emptyMap();
+
+        return favoriteRepository.countByProductIdsAndStatusAndFavoritedAtAfter(
                         targetType,
                         targetIds,
                         EntityStatus.ACTIVE,

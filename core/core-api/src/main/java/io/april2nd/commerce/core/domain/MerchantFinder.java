@@ -4,6 +4,7 @@ import io.april2nd.commerce.storage.db.core.MerchantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,9 @@ import java.util.stream.Collectors;
 public class MerchantFinder {
     private final MerchantRepository merchantRepository;
 
-    public List<Merchant> findAll(List<Long> merchantIds) {
+    public List<Merchant> findByIds(List<Long> merchantIds) {
+        if (merchantIds.isEmpty()) return Collections.emptyList();
+
         return merchantRepository.findAllById(merchantIds).stream()
                 .map(it -> new Merchant(it.getId(), it.getName()))
                 .collect(Collectors.toList());

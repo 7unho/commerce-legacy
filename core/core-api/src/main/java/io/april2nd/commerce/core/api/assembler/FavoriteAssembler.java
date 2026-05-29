@@ -6,12 +6,15 @@ import io.april2nd.commerce.core.domain.*;
 import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
+import io.april2nd.commerce.core.support.error.CoreException;
+import io.april2nd.commerce.core.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,39 +26,61 @@ public class FavoriteAssembler {
     private final BrandService brandService;
     private final MerchantService merchantService;
 
-    public Page<FavoriteResponse> findFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
-        Page<Favorite> page = favoriteService.findFavorites(user, targetType, offsetLimit);
-        if (page.content().isEmpty()) {
-            return new Page<>(Collections.emptyList(), page.hasNext());
+    public void applyFavorite(User user, ApplyFavoriteRequest request) {
+        FavoriteTargetType targetType = Objects.requireNonNullElse(request.targetType(), FavoriteTargetType.PRODUCT);
+        Long targetId = Optional.ofNullable(request.targetId())
+                .orElseThrow(() -> new CoreException(ErrorType.INVALID_REQUEST));
+
+        switch (request.type()) {
+            case FAVORITE -> favoriteService.addFavorite(user, targetType, targetId);
+            case UNFAVORITE -> favoriteService.removeFavorite(user, targetType, targetId);
         }
+    }
 
-        List<Long> targetIds = page.content().stream()
-                .map(Favorite::targetId)
-                .distinct().toList();
-
+    public Page<FavoriteResponse> getFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
         return switch (targetType) {
-            case PRODUCT -> {
-                Map<Long, Product> productMap = productService.findProducts(targetIds).stream()
-                        .collect(Collectors.toMap(Product::id, Function.identity()));
-                yield new Page<>(FavoriteResponse.of(page.content(), productMap), page.hasNext());
-            }
-            case BRAND -> {
-                Map<Long, Brand> brandMap = brandService.findBrands(targetIds).stream()
-                        .collect(Collectors.toMap(Brand::id, Function.identity()));
-                yield new Page<>(FavoriteResponse.ofBrands(page.content(), brandMap), page.hasNext());
-            }
-            case MERCHANT -> {
-                Map<Long, Merchant> merchantMap = merchantService.findMerchants(targetIds).stream()
-                        .collect(Collectors.toMap(Merchant::id, Function.identity()));
-                yield new Page<>(FavoriteResponse.ofMerchants(page.content(), merchantMap), page.hasNext());
-            }
+            case PRODUCT -> getProductFavorites(user, targetType, offsetLimit);
+            case BRAND -> getBrandFavorites(user, targetType, offsetLimit);
+            case MERCHANT -> getMerchantFavorites(user, targetType, offsetLimit);
         };
     }
 
-    public void applyFavorite(User user, ApplyFavoriteRequest request) {
-        switch (request.type()) {
-            case FAVORITE -> favoriteService.addFavorite(user, request.targetType(), request.targetId());
-            case UNFAVORITE -> favoriteService.removeFavorite(user, request.targetType(), request.targetId());
-        }
+    private Page<FavoriteResponse> getProductFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
+        Page<Favorite> favorites = favoriteService.findFavorites(user, targetType, offsetLimit);
+        List<Long> productIds = favorites.content().stream()
+                .filter(it -> it.targetType() == FavoriteTargetType.PRODUCT)
+                .map(Favorite::targetId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, Product> productMap = productService.findProducts(productIds).stream()
+                .collect(Collectors.toMap(Product::id, Function.identity()));
+
+        return new Page<>(FavoriteResponse.ofProduct(favorites.content(), productMap), favorites.hasNext());
+    }
+
+    private Page<FavoriteResponse> getBrandFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
+        Page<Favorite> favorites = favoriteService.findFavorites(user, targetType, offsetLimit);
+        List<Long> brandIds = favorites.content().stream()
+                .filter(it -> it.targetType() == FavoriteTargetType.BRAND)
+                .map(Favorite::targetId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, Brand> brandMap = brandService.find(brandIds).stream()
+                .collect(Collectors.toMap(Brand::id, Function.identity()));
+
+        return new Page<>(FavoriteResponse.ofBrand(favorites.content(), brandMap), favorites.hasNext());
+    }
+
+    private Page<FavoriteResponse> getMerchantFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
+        Page<Favorite> favorites = favoriteService.findFavorites(user, targetType, offsetLimit);
+        List<Long> merchantIds = favorites.content().stream()
+                .filter(it -> it.targetType() == FavoriteTargetType.MERCHANT)
+                .map(Favorite::targetId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, Merchant> merchantMap = merchantService.find(merchantIds).stream()
+                .collect(Collectors.toMap(Merchant::id, Function.identity()));
+
+        return new Page<>(FavoriteResponse.ofMerchant(favorites.content(), merchantMap), favorites.hasNext());
     }
 }

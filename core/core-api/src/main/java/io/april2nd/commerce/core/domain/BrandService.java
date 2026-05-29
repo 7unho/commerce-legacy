@@ -10,7 +10,7 @@ import java.util.List;
 public class BrandService {
     private final BrandFinder brandFinder;
 
-    public List<Brand> findBrands(List<Long> brandIds) {
-        return brandFinder.findAll(brandIds);
+    public List<Brand> find(List<Long> brandIds) {
+        return brandFinder.findByIds(brandIds);
     }
 }

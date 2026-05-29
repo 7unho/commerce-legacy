@@ -20,10 +20,10 @@ public class FavoriteController {
     @GetMapping("/v1/favorites")
     ApiResponse<PageResponse<FavoriteResponse>> getFavorites(
             User user,
-            @RequestParam FavoriteTargetType targetType,
+            @RequestParam(required = false, defaultValue = "PRODUCT") FavoriteTargetType targetType,
             @RequestParam Integer offset,
             @RequestParam Integer limit) {
-        Page<FavoriteResponse> page = favoriteAssembler.findFavorites(user, targetType, new OffsetLimit(offset, limit));
+        Page<FavoriteResponse> page = favoriteAssembler.getFavorites(user, targetType, new OffsetLimit(offset, limit));
         return ApiResponse.success(new PageResponse<>(page.content(), page.hasNext()));
     }
 

@@ -10,7 +10,7 @@ import java.util.List;
 public class MerchantService {
     private final MerchantFinder merchantFinder;
 
-    public List<Merchant> findMerchants(List<Long> merchantIds) {
-        return merchantFinder.findAll(merchantIds);
+    public List<Merchant> find(List<Long> merchantIds) {
+        return merchantFinder.findByIds(merchantIds);
     }
 }

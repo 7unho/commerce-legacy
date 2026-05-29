@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,6 +71,8 @@ public class ProductFinder {
     }
 
     public List<Product> findAll(List<Long> productIds) {
+        if (productIds.isEmpty()) return Collections.emptyList();
+
         return productRepository.findAllById(productIds)
                 .stream()
                 .map(it -> new Product(
