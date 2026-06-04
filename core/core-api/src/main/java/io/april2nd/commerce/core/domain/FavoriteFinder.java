@@ -1,6 +1,7 @@
 package io.april2nd.commerce.core.domain;
 
 import io.april2nd.commerce.core.enums.EntityStatus;
+import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
 import io.april2nd.commerce.storage.db.core.FavoriteEntity;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -20,10 +22,11 @@ import java.util.stream.Collectors;
 public class FavoriteFinder {
     private final FavoriteRepository favoriteRepository;
 
-    public Page<Favorite> findFavorites(User user, OffsetLimit offsetLimit) {
+    public Page<Favorite> findFavorites(User user, FavoriteTargetType targetType, OffsetLimit offsetLimit) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
-        Slice<FavoriteEntity> result = favoriteRepository.findByUserIdAndStatusAndUpdatedAtAfter(
+        Slice<FavoriteEntity> result = favoriteRepository.findByUserIdAndStatusAndTargetTypeAndUpdatedAtAfter(
                 user.id(),
+                targetType,
                 EntityStatus.ACTIVE,
                 cutoff,
                 offsetLimit.toPageable()
@@ -34,7 +37,8 @@ public class FavoriteFinder {
                         .map(it -> new Favorite(
                                 it.getId(),
                                 it.getUserId(),
-                                it.getProductId(),
+                                it.getTargetType(),
+                                it.getTargetId(),
                                 it.getFavoritedAt()
                         ))
                         .collect(Collectors.toList()),
@@ -42,14 +46,17 @@ public class FavoriteFinder {
         );
     }
 
-    public Map<Long, Long> countByProductIds(Collection<Long> productIds, LocalDateTime from) {
-        return favoriteRepository.findCountsByProductIdsAndStatusAndFavoritedAtAfter(
-                        productIds,
+    public Map<Long, Long> countByTargetIds(FavoriteTargetType targetType, Collection<Long> targetIds, LocalDateTime from) {
+        if (targetIds.isEmpty()) return Collections.emptyMap();
+
+        return favoriteRepository.countByProductIdsAndStatusAndFavoritedAtAfter(
+                        targetType,
+                        targetIds,
                         EntityStatus.ACTIVE,
                         from
                 ).stream()
                 .collect(Collectors.toMap(
-                        TargetCountProjection::getProductId,
+                        TargetCountProjection::getTargetId,
                         TargetCountProjection::getCount
                 ));
     }

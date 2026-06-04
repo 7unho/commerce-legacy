@@ -47,7 +47,8 @@ public class CartReader {
                                                         productMap.get(it.getProductId()).getCostPrice(),
                                                         productMap.get(it.getProductId()).getSalesPrice(),
                                                         productMap.get(it.getProductId()).getDiscountedPrice()
-                                                )
+                                                ),
+                                                productMap.get(it.getProductId()).getUpdatedAt()
                                         ),
                                         it.getQuantity()
                                 )

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,9 +19,9 @@ import static java.util.stream.Collectors.toList;
 @Component
 @RequiredArgsConstructor
 public class ProductFinder {
-    private ProductRepository productRepository;
-    private ProductCategoryRepository productCategoryRepository;
-    private ProductSectionRepository productSectionRepository;
+    private final ProductRepository productRepository;
+    private final ProductCategoryRepository productCategoryRepository;
+    private final ProductSectionRepository productSectionRepository;
 
     public Page<Product> findByCategory(Long categoryId, OffsetLimit offsetLimit) {
         Slice<ProductCategoryEntity> categories = productCategoryRepository.findByCategoryIdAndStatus(categoryId, EntityStatus.ACTIVE, offsetLimit.toPageable());
@@ -41,11 +42,12 @@ public class ProductFinder {
                                 it.getCostPrice(),
                                 it.getSalesPrice(),
                                 it.getDiscountedPrice()
-                        )
+                        ),
+                        it.getUpdatedAt()
                 ))
                 .collect(toList());
 
-        return new Page(products, categories.hasNext());
+        return new Page<>(products, categories.hasNext());
     }
 
     public Product find(Long productId) {
@@ -63,8 +65,30 @@ public class ProductFinder {
                         found.getCostPrice(),
                         found.getSalesPrice(),
                         found.getDiscountedPrice()
-                )
+                ),
+                found.getUpdatedAt()
         );
+    }
+
+    public List<Product> findAll(List<Long> productIds) {
+        if (productIds.isEmpty()) return Collections.emptyList();
+
+        return productRepository.findAllById(productIds)
+                .stream()
+                .map(it -> new Product(
+                        it.getId(),
+                        it.getName(),
+                        it.getThumbnailUrl(),
+                        it.getDescription(),
+                        it.getShortDescription(),
+                        new Price(
+                                it.getCostPrice(),
+                                it.getSalesPrice(),
+                                it.getDiscountedPrice()
+                        ),
+                        it.getUpdatedAt()
+                ))
+                .collect(toList());
     }
 
     public List<ProductSection> findSections(Long productId) {
