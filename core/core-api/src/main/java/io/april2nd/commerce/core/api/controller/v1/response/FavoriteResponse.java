@@ -32,9 +32,10 @@ public record FavoriteResponse(
     }
 
     public static List<FavoriteResponse> ofProduct(List<Favorite> favorites, Map<Long, Product> productMap) {
-        return favorites.stream().map(
-                it -> {
-                    Product product = Objects.requireNonNull(productMap.get(it.targetId()));
+        return favorites.stream()
+                .map(it -> {
+                    Product product = productMap.get(it.targetId());
+                    if (product == null) return null;
 
                     return new FavoriteResponse(
                             it.id(),
@@ -50,14 +51,16 @@ public record FavoriteResponse(
                             it.favoritedAt(),
                             product.updatedAt().isAfter(it.favoritedAt())
                     );
-                }
-        ).collect(Collectors.toUnmodifiableList());
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public static List<FavoriteResponse> ofBrand(List<Favorite> favorites, Map<Long, Brand> brandMap) {
-        return favorites.stream().map(
-                it -> {
-                    Brand brand = Objects.requireNonNull(brandMap.get(it.targetId()));
+        return favorites.stream()
+                .map(it -> {
+                    Brand brand = brandMap.get(it.targetId());
+                    if (brand == null) return null;
 
                     return new FavoriteResponse(
                             it.id(),
@@ -66,14 +69,16 @@ public record FavoriteResponse(
                             brand.name(),
                             it.favoritedAt()
                     );
-                }
-        ).collect(Collectors.toUnmodifiableList());
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public static List<FavoriteResponse> ofMerchant(List<Favorite> favorites, Map<Long, Merchant> merchantMap) {
-        return favorites.stream().map(
-                it -> {
-                    Merchant merchant = Objects.requireNonNull(merchantMap.get(it.targetId()));
+        return favorites.stream()
+                .map(it -> {
+                    Merchant merchant = merchantMap.get(it.targetId());
+                    if (merchant == null) return null;
 
                     return new FavoriteResponse(
                             it.id(),
@@ -82,7 +87,8 @@ public record FavoriteResponse(
                             merchant.name(),
                             it.favoritedAt()
                     );
-                }
-        ).collect(Collectors.toUnmodifiableList());
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList());
     }
 }
