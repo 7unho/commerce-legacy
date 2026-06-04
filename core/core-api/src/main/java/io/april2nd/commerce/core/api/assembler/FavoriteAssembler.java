@@ -6,15 +6,12 @@ import io.april2nd.commerce.core.domain.*;
 import io.april2nd.commerce.core.enums.FavoriteTargetType;
 import io.april2nd.commerce.core.support.OffsetLimit;
 import io.april2nd.commerce.core.support.Page;
-import io.april2nd.commerce.core.support.error.CoreException;
-import io.april2nd.commerce.core.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,12 +25,10 @@ public class FavoriteAssembler {
 
     public void applyFavorite(User user, ApplyFavoriteRequest request) {
         FavoriteTargetType targetType = Objects.requireNonNullElse(request.targetType(), FavoriteTargetType.PRODUCT);
-        Long targetId = Optional.ofNullable(request.targetId())
-                .orElseThrow(() -> new CoreException(ErrorType.INVALID_REQUEST));
 
         switch (request.type()) {
-            case FAVORITE -> favoriteService.addFavorite(user, targetType, targetId);
-            case UNFAVORITE -> favoriteService.removeFavorite(user, targetType, targetId);
+            case FAVORITE -> favoriteService.addFavorite(user, targetType, request.targetId());
+            case UNFAVORITE -> favoriteService.removeFavorite(user, targetType, request.targetId());
         }
     }
 
