@@ -1,15 +1,9 @@
 package io.april2nd.commerce.storage.db.core;
 
 import io.april2nd.commerce.core.enums.OwnedCouponState;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import io.april2nd.commerce.storage.db.core.error.IllegalCouponUsageException;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(
@@ -22,27 +16,64 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OwnedCouponEntity extends BaseEntity {
 
+    @Column(nullable = false, updatable = false)
     private Long userId;
 
+    @Column(nullable = false, updatable = false)
     private Long couponId;
 
-    @Enumerated(EnumType.STRING)
+    @Setter(AccessLevel.PROTECTED)
+    @Column(nullable = false)
     private OwnedCouponState state;
+
+    @Column(nullable = false, updatable = false)
+    private Long maxUseCount;
+
+    @Column(nullable = false)
+    @Getter(AccessLevel.NONE)
+    private Long usedCount;
 
     @Version
     private Long version = 0L;
 
-    public OwnedCouponEntity(Long userId, Long couponId, OwnedCouponState state) {
+    @Builder
+    public OwnedCouponEntity(Long userId, Long couponId, OwnedCouponState state, Long maxUseCount, Long usedCount) {
         this.userId = userId;
         this.couponId = couponId;
         this.state = state;
+        this.maxUseCount = maxUseCount;
+        this.usedCount = usedCount;
+    }
+
+    public Long usedCount() {
+        return usedCount;
     }
 
     public void use() {
-        this.state = OwnedCouponState.USED;
+        if (isFullyUsed()) {
+            throw new IllegalCouponUsageException("Coupon cannot be used anymore");
+        }
+        this.usedCount += 1L;
+        if (isFullyUsed()) {
+            this.state = OwnedCouponState.USED;
+        }
     }
 
     public void revert() {
-        this.state = OwnedCouponState.DOWNLOADED;
+        if (isUnused()) {
+            throw new IllegalCouponUsageException("Coupon cannot be reverted because it has not been used");
+        }
+        this.usedCount -= 1L;
+        if (isUnused()) {
+            this.state = OwnedCouponState.DOWNLOADED;
+        }
+    }
+
+    private boolean isFullyUsed() {
+        return (this.maxUseCount - this.usedCount) == 0L;
+    }
+
+    private boolean isUnused() {
+        return this.usedCount == 0L;
     }
 }

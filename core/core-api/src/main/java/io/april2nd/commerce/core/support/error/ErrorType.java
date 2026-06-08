@@ -26,6 +26,8 @@ public enum ErrorType {
 
     // 소유 쿠폰
     OWNED_COUPON_INVALID(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "사용할 수 없는 쿠폰입니다.", LogLevel.INFO),
+    OWNED_COUPON_INVALID_USAGE(HttpStatus.BAD_REQUEST, ErrorCode.E5001, "비정상적인 쿠폰 사용입니다.", LogLevel.INFO),
+    OWNED_COUPON_MIN_AMOUNT_NOT_REACHED(HttpStatus.BAD_REQUEST, ErrorCode.E5002, "쿠폰 사용 가능 최소 금액이 부족합니다.", LogLevel.INFO),
 
     // 포인트
     POINT_EXCEEDS_BALANCE(HttpStatus.BAD_REQUEST, ErrorCode.E6000, "보유 포인트를 초과하여 사용할 수 없습니다.", LogLevel.INFO),
