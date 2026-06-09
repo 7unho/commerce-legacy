@@ -10,5 +10,6 @@ public record Coupon(
         String name,
         CouponType type,
         BigDecimal discount,
+        BigDecimal minOrderAmount,
         LocalDateTime expiredAt
 ) {}

@@ -22,6 +22,8 @@ public enum ErrorCode {
 
     // 소유쿠폰
     E5000,
+    E5001,
+    E5002,
 
     // 포인트
     E6000,

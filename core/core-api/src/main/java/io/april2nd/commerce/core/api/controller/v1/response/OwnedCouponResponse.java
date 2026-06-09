@@ -15,6 +15,9 @@ public record OwnedCouponResponse(
         String name,
         CouponType type,
         BigDecimal discount,
+        BigDecimal minOrderAmount,
+        Long maxUseCount,
+        Long usedCount,
         LocalDateTime expiredAt
 ) {
     public static OwnedCouponResponse of(OwnedCoupon ownedCoupon) {
@@ -24,6 +27,9 @@ public record OwnedCouponResponse(
                 ownedCoupon.coupon().name(),
                 ownedCoupon.coupon().type(),
                 ownedCoupon.coupon().discount(),
+                ownedCoupon.coupon().minOrderAmount(),
+                ownedCoupon.maxUseCount(),
+                ownedCoupon.usedCount(),
                 ownedCoupon.coupon().expiredAt()
         );
     }

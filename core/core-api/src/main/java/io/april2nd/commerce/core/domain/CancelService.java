@@ -16,7 +16,7 @@ import java.util.Objects;
 public class CancelService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final OwnedCouponRepository ownedCouponRepository;
+    private final OwnedCouponUsageManager ownedCouponUsageManager;
     private final CancelRepository cancelRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final PointHandler pointHandler;
@@ -40,8 +40,7 @@ public class CancelService {
         order.canceled();
 
         if (payment.hasAppliedCoupon()) {
-            ownedCouponRepository.findById(payment.getOwnedCouponId())
-                    .ifPresent(OwnedCouponEntity::revert);
+            ownedCouponUsageManager.revert(payment.getOwnedCouponId());
         }
 
         pointHandler.earn(new User(payment.getUserId()), PointType.PAYMENT, payment.getId(), payment.getUsedPoint());

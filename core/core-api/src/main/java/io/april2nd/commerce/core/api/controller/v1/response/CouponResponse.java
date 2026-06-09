@@ -11,6 +11,7 @@ public record CouponResponse(
         String name,
         CouponType type,
         BigDecimal discount,
+        BigDecimal minOrderAmount,
         LocalDateTime expiredAt
 ) {
     static CouponResponse of(Coupon coupon) {
@@ -19,6 +20,7 @@ public record CouponResponse(
                 coupon.name(),
                 coupon.type(),
                 coupon.discount(),
+                coupon.minOrderAmount(),
                 coupon.expiredAt()
         );
     }

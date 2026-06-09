@@ -19,7 +19,7 @@ public class PaymentManager {
     private final OrderRepository orderRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final PointHandler pointHandler;
-    private final OwnedCouponRepository ownedCouponRepository;
+    private final OwnedCouponUsageManager ownedCouponUsageManager;
 
     @Transactional
     public Long create(Order order, PaymentDiscount paymentDiscount) {
@@ -70,7 +70,7 @@ public class PaymentManager {
         order.paid();
 
         if (payment.hasAppliedCoupon()) {
-            ownedCouponRepository.findById(payment.getOwnedCouponId()).ifPresent(OwnedCouponEntity::use);
+            ownedCouponUsageManager.use(payment.getOwnedCouponId());
         }
 
         pointHandler.deduct(new User(payment.getUserId()), PointType.PAYMENT, payment.getId(), payment.getUsedPoint());
