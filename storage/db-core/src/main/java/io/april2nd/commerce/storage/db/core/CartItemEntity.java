@@ -22,4 +22,9 @@ public class CartItemEntity extends BaseEntity {
     public void applyQuantity(Long value) {
         this.quantity = (value < 1) ? 1 : value;
     }
+
+    public void addQuantity(Long value) {
+        this.quantity += value;
+        if (this.quantity < 1) this.quantity = 1L;
+    }
 }

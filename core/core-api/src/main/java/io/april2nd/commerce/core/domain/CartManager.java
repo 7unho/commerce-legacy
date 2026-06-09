@@ -30,9 +30,12 @@ public class CartManager {
             return saved.getId();
         }
 
-        if (existing.isDeleted()) existing.active();
-
-        existing.applyQuantity(item.quantity());
+        if (existing.isDeleted()) {
+            existing.active();
+            existing.applyQuantity(item.quantity());
+        } else {
+            existing.addQuantity(item.quantity());
+        }
 
         return existing.getId();
     }
