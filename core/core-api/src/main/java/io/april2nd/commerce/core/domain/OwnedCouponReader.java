@@ -23,7 +23,7 @@ public class OwnedCouponReader {
         List<OwnedCouponEntity> owned = ownedCouponRepository.findByUserIdAndStatus(userId, EntityStatus.ACTIVE);
         if (owned.isEmpty()) return Collections.emptyList();
 
-        Set<Long> ownedCouponIds = owned.stream().map(OwnedCouponEntity::getId).collect(Collectors.toSet());
+        Set<Long> ownedCouponIds = owned.stream().map(OwnedCouponEntity::getCouponId).collect(Collectors.toSet());
         Map<Long, CouponEntity> couponMap = couponRepository.findAllById(ownedCouponIds)
                 .stream()
                 .collect(Collectors.toMap(
@@ -60,7 +60,7 @@ public class OwnedCouponReader {
         List<OwnedCouponEntity> owned = ownedCouponRepository.findOwnedCouponIds(userId, couponIds, now);
         if (owned.isEmpty()) return Collections.emptyList();
 
-        Set<Long> ownedCouponIds = owned.stream().map(OwnedCouponEntity::getId).collect(Collectors.toSet());
+        Set<Long> ownedCouponIds = owned.stream().map(OwnedCouponEntity::getCouponId).collect(Collectors.toSet());
         Map<Long, CouponEntity> couponMap = couponRepository.findAllById(ownedCouponIds)
                 .stream()
                 .collect(Collectors.toMap(

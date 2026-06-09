@@ -7,6 +7,7 @@ import io.april2nd.commerce.storage.db.core.CouponEntity;
 import io.april2nd.commerce.storage.db.core.CouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,8 @@ import java.time.LocalDateTime;
 public class CouponDownloader {
     private final CouponRepository couponRepository;
     private final OwnedCouponAdder ownedCouponAdder;
-
+    
+    @Transactional
     public void download(Long userId, Long couponId) {
         CouponEntity coupon = couponRepository.findByIdAndStatusAndExpiredAtAfter(
                 couponId,

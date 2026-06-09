@@ -11,6 +11,7 @@ import lombok.ToString;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @ToString
@@ -47,7 +48,7 @@ public class PaymentDiscount {
 
         if (useOwnedCouponId > 0) {
             OwnedCoupon ownedCoupon = ownedCoupons.stream()
-                    .filter(it -> it.id() == useOwnedCouponId)
+                    .filter(it -> Objects.equals(it.id(), useOwnedCouponId))
                     .findFirst()
                     .orElseThrow(() -> new CoreException(ErrorType.OWNED_COUPON_INVALID));
 

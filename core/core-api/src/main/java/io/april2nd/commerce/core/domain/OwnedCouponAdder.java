@@ -6,6 +6,7 @@ import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.OwnedCouponEntity;
 import io.april2nd.commerce.storage.db.core.OwnedCouponRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,13 +19,17 @@ public class OwnedCouponAdder {
 
         if (existing != null) throw new CoreException(ErrorType.COUPON_ALREADY_DOWNLOADED);
 
-        ownedCouponRepository.save(
-                new OwnedCouponEntity(
-                        userId,
-                        couponId,
-                        OwnedCouponState.DOWNLOADED,
-                        maxUseCount,
-                        0L)
-        );
+        try {
+            ownedCouponRepository.save(
+                    new OwnedCouponEntity(
+                            userId,
+                            couponId,
+                            OwnedCouponState.DOWNLOADED,
+                            maxUseCount,
+                            0L)
+            );
+        } catch (DataIntegrityViolationException e) {
+            throw new CoreException(ErrorType.COUPON_ALREADY_DOWNLOADED);
+        }
     }
 }

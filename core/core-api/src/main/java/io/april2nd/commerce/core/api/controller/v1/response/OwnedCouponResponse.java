@@ -16,7 +16,7 @@ public record OwnedCouponResponse(
         CouponType type,
         BigDecimal discount,
         BigDecimal minOrderAmount,
-        Long maxUserCount,
+        Long maxUseCount,
         Long usedCount,
         LocalDateTime expiredAt
 ) {
