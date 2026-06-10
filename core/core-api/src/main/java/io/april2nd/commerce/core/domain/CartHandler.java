@@ -57,10 +57,7 @@ public class CartHandler {
         if (cart.getType() == CartType.DEFAULT) throw new CoreException(ErrorType.CART_OPERATION_NOT_ALLOWED);
 
         cart.delete();
-        cartAccessRepository.findByCartIdAndStatus(cartId, EntityStatus.ACTIVE)
-                .forEach(CartAccessEntity::delete);
-        cartItemRepository.findByCartIdAndStatus(cartId, EntityStatus.ACTIVE)
-                .forEach(CartItemEntity::delete);
+
         return cart.getId();
     }
 
@@ -71,22 +68,15 @@ public class CartHandler {
         if (access.getType() == CartType.DEFAULT) throw new CoreException(ErrorType.CART_OPERATION_NOT_ALLOWED);
         if (access.isExpired()) throw new CoreException(ErrorType.CART_SHARED_EXPIRED);
 
-        CartAccessEntity memberAccess = cartAccessRepository
-                .findByCartIdAndAccessUserId(access.getCartId(), userId)
-                .orElse(null);
-        if (memberAccess == null) {
-            cartAccessRepository.save(
-                    new CartAccessEntity(
-                            "%d-%d-%d".formatted(access.getCartId(), access.getUserId(), userId),
-                            access.getCartId(),
-                            access.getType(),
-                            access.getUserId(),
-                            userId,
-                            access.getExpiredAt()
-                    )
-            );
-        } else if (memberAccess.isDeleted()) {
-            memberAccess.grant();
-        }
+        cartAccessRepository.save(
+                new CartAccessEntity(
+                        "%d-%d-%d".formatted(access.getCartId(), access.getUserId(), userId),
+                        access.getCartId(),
+                        access.getType(),
+                        access.getUserId(),
+                        userId,
+                        access.getExpiredAt()
+                )
+        );
     }
 }

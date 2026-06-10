@@ -47,8 +47,4 @@ public class CartAccessEntity extends BaseEntity {
     public boolean isNotExpired() {
         return !isExpired();
     }
-
-    public void grant() {
-        active();
-    }
 }

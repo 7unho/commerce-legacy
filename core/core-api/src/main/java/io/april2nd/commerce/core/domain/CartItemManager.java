@@ -57,6 +57,6 @@ public class CartItemManager {
     public void deleteItemsByProductOptions(Long userId, List<Long> productOptionIds) {
         cartItemRepository.findByUserIdAndProductOptionIdInAndStatus(userId, productOptionIds, EntityStatus.ACTIVE)
                 .stream()
-                .forEach(cartItemRepository::delete);
+                .forEach(CartItemEntity::delete);
     }
 }
