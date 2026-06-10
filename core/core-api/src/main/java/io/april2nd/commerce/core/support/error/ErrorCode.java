@@ -33,4 +33,9 @@ public enum ErrorCode {
     E7001,
     E7002,
     E7003,
+
+    // 장바구니
+    E8000,
+    E8001,
+    E8002,
 }
