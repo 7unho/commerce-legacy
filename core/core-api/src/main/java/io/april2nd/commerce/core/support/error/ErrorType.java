@@ -41,7 +41,7 @@ public enum ErrorType {
     // 장바구니
     CART_OPERATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "기본 장바구니에는 허용되지 않는 작업입니다.", LogLevel.INFO),
     CART_SHARED_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E8001, "공유 장바구니를 찾을 수 없습니다.", LogLevel.INFO),
-    CART_SHARED_EXPIRED(HttpStatus.BAD_REQUEST, ErrorCode.E8002, "만료 된 공유 장바구니입니다.", LogLevel.INFO);
+    CART_SHARED_EXPIRED(HttpStatus.BAD_REQUEST, ErrorCode.E8002, "만료된 공유 장바구니입니다.", LogLevel.INFO);
 
     private final HttpStatus status;
     private final ErrorCode code;
