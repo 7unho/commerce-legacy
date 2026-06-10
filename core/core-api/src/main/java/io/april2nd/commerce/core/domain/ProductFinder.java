@@ -70,7 +70,7 @@ public class ProductFinder {
         );
     }
 
-    public List<Product> findAll(List<Long> productIds) {
+    public List<Product> find(List<Long> productIds) {
         if (productIds.isEmpty()) return Collections.emptyList();
 
         return productRepository.findAllById(productIds)

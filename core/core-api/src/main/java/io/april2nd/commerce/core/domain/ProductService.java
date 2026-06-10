@@ -22,7 +22,7 @@ public class ProductService {
     }
 
     public List<Product> findProducts(List<Long> productIds) {
-        return productFinder.findAll(productIds);
+        return productFinder.find(productIds);
     }
 
     public List<ProductOption> findOptions(Long productId) {

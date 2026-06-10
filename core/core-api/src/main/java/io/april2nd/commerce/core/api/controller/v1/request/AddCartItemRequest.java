@@ -1,17 +1,17 @@
 package io.april2nd.commerce.core.api.controller.v1.request;
 
 import io.april2nd.commerce.core.domain.AddCartItem;
+import io.april2nd.commerce.core.support.error.CoreException;
+import io.april2nd.commerce.core.support.error.ErrorType;
 
 public record AddCartItemRequest(
         Long cartId,
         Long productId,
+        Long productOptionId,
         Long quantity
 ) {
-    public AddCartItemRequest(Long productId, Long quantity) {
-        this(null, productId, quantity);
-    }
-
     public AddCartItem toAddCartItem() {
-        return new AddCartItem(cartId, productId, quantity);
+        if (quantity <= 0) throw new CoreException(ErrorType.INVALID_REQUEST);
+        return new AddCartItem(cartId, productId, productOptionId, quantity);
     }
 }

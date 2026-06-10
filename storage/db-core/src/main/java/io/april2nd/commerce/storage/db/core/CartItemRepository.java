@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> {
+    Optional<CartItemEntity> findByUserIdAndIdAndStatus(Long userId, Long id, EntityStatus status);
+
+    CartItemEntity findByCartIdAndProductIdAndProductOptionId(Long cartId, Long productId, Long productOptionId);
+
     List<CartItemEntity> findByCartIdAndStatus(Long cartId, EntityStatus status);
 
-    List<CartItemEntity> findByCartIdInAndStatus(List<Long> cartIds, EntityStatus status);
-
-    CartItemEntity findByCartIdAndProductId(Long cartId, Long productId);
-
-    Optional<CartItemEntity> findByIdAndStatus(Long id, EntityStatus status);
+    List<CartItemEntity> findByUserIdAndProductOptionIdInAndStatus(Long userId, List<Long> productOptionIds, EntityStatus status);
 }

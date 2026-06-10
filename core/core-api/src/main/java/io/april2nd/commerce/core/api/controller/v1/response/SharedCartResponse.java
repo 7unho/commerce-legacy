@@ -1,25 +1,33 @@
 package io.april2nd.commerce.core.api.controller.v1.response;
 
-import io.april2nd.commerce.core.domain.SharedCart;
-import io.april2nd.commerce.core.enums.SharedCartRole;
-import io.april2nd.commerce.core.enums.SharedCartState;
+import io.april2nd.commerce.core.domain.CartAccess;
+import io.april2nd.commerce.core.enums.CartType;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record SharedCartResponse(
+        String accessKey,
         Long cartId,
-        String name,
-        SharedCartRole role,
-        SharedCartState status,
-        LocalDateTime createdAt,
+        CartType type,
         LocalDateTime expiredAt,
-        List<CartResponse.CartItemResponse> items
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
-    public static SharedCartResponse of(SharedCart cart) {
+    public static SharedCartResponse of(CartAccess access) {
         return new SharedCartResponse(
-                cart.id(), cart.name(), cart.role(), cart.state(), cart.createdAt(), cart.expiredAt(),
-                cart.items().stream().map(CartResponse.CartItemResponse::of).toList()
+                access.accessKey(),
+                access.cartId(),
+                access.type(),
+                access.expiredAt(),
+                access.createdAt(),
+                access.updatedAt()
         );
+    }
+
+    public static List<SharedCartResponse> of(List<CartAccess> accesses) {
+        return accesses.stream()
+                .map(SharedCartResponse::of)
+                .toList();
     }
 }

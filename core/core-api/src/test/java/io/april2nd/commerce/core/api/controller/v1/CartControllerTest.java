@@ -1,15 +1,22 @@
 package io.april2nd.commerce.core.api.controller.v1;
 
 import io.april2nd.commerce.core.api.controller.v1.request.AddCartItemRequest;
-import io.april2nd.commerce.core.api.controller.v1.request.CreateSharedCartRequest;
 import io.april2nd.commerce.core.api.controller.v1.request.ModifyCartItemRequest;
-import io.april2nd.commerce.core.api.controller.v1.response.AcceptSharedCartResponse;
 import io.april2nd.commerce.core.api.controller.v1.response.CartResponse;
-import io.april2nd.commerce.core.api.controller.v1.response.CreateSharedCartResponse;
-import io.april2nd.commerce.core.domain.*;
+import io.april2nd.commerce.core.api.controller.v1.response.SharedCartResponse;
+import io.april2nd.commerce.core.domain.AddCartItem;
+import io.april2nd.commerce.core.domain.Cart;
+import io.april2nd.commerce.core.domain.CartAccess;
+import io.april2nd.commerce.core.domain.CartItem;
+import io.april2nd.commerce.core.domain.CartService;
+import io.april2nd.commerce.core.domain.ModifyCartItem;
+import io.april2nd.commerce.core.domain.Price;
+import io.april2nd.commerce.core.domain.Product;
+import io.april2nd.commerce.core.domain.ProductOption;
+import io.april2nd.commerce.core.domain.User;
+import io.april2nd.commerce.core.enums.CartType;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import io.april2nd.commerce.core.support.response.ResultType;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,113 +35,91 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class CartControllerTest {
-
-    @InjectMocks
-    private CartController cartController;
-
-    @Mock
-    private CartService cartService;
+    @InjectMocks private CartController cartController;
+    @Mock private CartService cartService;
 
     @Test
-    @DisplayName("장바구니를 조회한다")
-    void get_cart() {
-        // given
+    void getsDefaultCart() {
         User user = new User(1L);
-        Cart cart = new Cart(1L, List.of(
-                new CartItem(1L, new Product(100L, "Product 1", "url1", "desc1", "short1",
-                        new Price(BigDecimal.valueOf(1000), BigDecimal.valueOf(1500), BigDecimal.valueOf(1200)),
-                        LocalDateTime.now()), 2L)
-        ));
-        given(cartService.getCart(user)).willReturn(cart);
+        given(cartService.getCart(user)).willReturn(new Cart(1L, List.of(cartItem())));
 
-        // when
         ApiResponse<CartResponse> response = cartController.getCart(user);
 
-        // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
-        assertThat(response.getData().items()).hasSize(1);
-        assertThat(response.getData().items().get(0).productId()).isEqualTo(100L);
+        assertThat(response.getData().items()).singleElement()
+                .extracting(CartResponse.CartItemResponse::productId)
+                .isEqualTo(100L);
     }
 
     @Test
-    @DisplayName("장바구니에 아이템을 추가한다")
-    void add_cart_item() {
-        // given
+    void addsCartItemWithCartAndOption() {
         User user = new User(1L);
-        AddCartItemRequest request = new AddCartItemRequest(100L, 2L);
+        AddCartItemRequest request = new AddCartItemRequest(10L, 100L, 1000L, 2L);
 
-        // when
         ApiResponse<Void> response = cartController.addCartItem(user, request);
 
-        // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
         verify(cartService).addCartItem(eq(user), any(AddCartItem.class));
     }
 
     @Test
-    @DisplayName("장바구니 아이템 수량을 수정한다")
-    void modify_cart_item() {
-        // given
+    void modifiesCartItem() {
         User user = new User(1L);
-        Long cartItemId = 1L;
-        ModifyCartItemRequest request = new ModifyCartItemRequest(5L);
 
-        // when
-        ApiResponse<Void> response = cartController.modifyCartItem(user, cartItemId, request);
+        ApiResponse<Void> response = cartController.modifyCartItem(
+                user, 20L, new ModifyCartItemRequest(5L)
+        );
 
-        // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
         verify(cartService).modifyCartItem(eq(user), any(ModifyCartItem.class));
     }
 
     @Test
-    @DisplayName("장바구니 아이템을 삭제한다")
-    void delete_cart_item() {
-        // given
+    void createsSharedCart() {
         User user = new User(1L);
-        Long cartItemId = 1L;
+        CartAccess access = access(10L, 1L);
+        given(cartService.createSharedCarts(user)).willReturn(access);
 
-        // when
-        ApiResponse<Void> response = cartController.deleteCartItem(user, cartItemId);
+        ApiResponse<SharedCartResponse> response = cartController.createSharedCart(user);
 
-        // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
-        verify(cartService).deleteCartItem(user, cartItemId);
+        assertThat(response.getData().cartId()).isEqualTo(10L);
+        assertThat(response.getData().accessKey()).isEqualTo("access-key");
     }
 
     @Test
-    @DisplayName("공유 장바구니를 생성한다")
-    void create_shared_cart() {
-        // given
+    void getsAccessibleSharedCarts() {
         User user = new User(1L);
-        CreateSharedCartRequest request = new CreateSharedCartRequest("공유 장바구니");
-        LocalDateTime expiredAt = LocalDateTime.now().plusDays(7);
-        given(cartService.createSharedCart(eq(user), any(CreateSharedCart.class)))
-                .willReturn(new CreatedSharedCart(1L, "access-key", expiredAt));
+        given(cartService.getAccessibleCart(user)).willReturn(List.of(access(10L, 1L), access(20L, 2L)));
 
-        // when
-        ApiResponse<CreateSharedCartResponse> response = cartController.createSharedCart(user, request);
+        ApiResponse<List<SharedCartResponse>> response = cartController.getSharedCarts(user);
 
-        // then
-        assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
-        assertThat(response.getData().cartId()).isEqualTo(1L);
-        verify(cartService).createSharedCart(eq(user), any(CreateSharedCart.class));
+        assertThat(response.getData()).extracting(SharedCartResponse::cartId).containsExactly(10L, 20L);
     }
 
     @Test
-    @DisplayName("접근 키로 공유 장바구니를 수락한다")
-    void accept_shared_cart() {
-        // given
+    void acceptsSharedCartByAccessKey() {
         User user = new User(2L);
-        String accessKey = "access-key";
-        given(cartService.acceptSharedCart(user, accessKey)).willReturn(1L);
 
-        // when
-        ApiResponse<AcceptSharedCartResponse> response = cartController.acceptSharedCart(user, accessKey);
+        ApiResponse<Void> response = cartController.accessCart(user, "access-key");
 
-        // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
-        assertThat(response.getData().cartId()).isEqualTo(1L);
-        verify(cartService).acceptSharedCart(user, accessKey);
+        verify(cartService).access(user, "access-key");
+    }
+
+    private static CartAccess access(Long cartId, Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        return new CartAccess(
+                "access-key", cartId, CartType.SHARED, userId, now.plusDays(7), now, now
+        );
+    }
+
+    private static CartItem cartItem() {
+        Price price = new Price(BigDecimal.TEN, BigDecimal.TEN, BigDecimal.TEN);
+        Product product = new Product(
+                100L, "상품", "url", "설명", "짧은 설명", price, LocalDateTime.now()
+        );
+        ProductOption option = new ProductOption(1000L, 100L, "옵션", "옵션 설명", price);
+        return new CartItem(20L, product, option, 2L);
     }
 }
