@@ -30,4 +30,23 @@ public class ProductOptionFinder {
                 )
                 .collect(Collectors.toList());
     }
+
+    public List<ProductOption> find(List<Long> ids, EntityStatus status) {
+        return productOptionRepository.findByIdInAndStatus(ids, status)
+                .stream()
+                .map(it ->
+                        new ProductOption(
+                                it.getId(),
+                                it.getProductId(),
+                                it.getName(),
+                                it.getDescription(),
+                                new Price(
+                                        it.getCostPrice(),
+                                        it.getSalesPrice(),
+                                        it.getDiscountedPrice()
+                                )
+                        )
+                )
+                .collect(Collectors.toList());
+    }
 }

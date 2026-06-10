@@ -9,41 +9,44 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CartService {
     private final CartReader cartReader;
-    private final CartManager cartManager;
+    private final CartItemManager cartItemManager;
+    private final CartHandler cartHandler;
+    private final CartVerifier cartVerifier;
 
     public Cart getCart(User user) {
-        return cartReader.getCart(user);
+        return cartReader.getCart(user.id());
+    }
+
+    public List<CartAccess> getAccessibleCart(User user) {
+        return cartReader.getCartAccessList(user.id());
+    }
+
+    public Cart getSharedCart(User user, Long cartId) {
+        return cartReader.getSharedCart(user.id(), cartId);
+    }
+
+    public CartAccess createSharedCarts(User user) {
+        return cartHandler.createSharedCart(user.id());
+    }
+
+    public void deleteCart(User user, Long cartId) {
+        cartHandler.remove(user.id(), cartId);
+    }
+
+    public void access(User user, String accessKey) {
+        cartHandler.access(user.id(), accessKey);
     }
 
     public Long addCartItem(User user, AddCartItem item) {
-        return cartManager.add(user, item);
+        CartOwner owner = cartVerifier.verifyAccess(user.id(), item.cartId());
+        return cartItemManager.addItem(owner, item);
     }
 
     public Long modifyCartItem(User user, ModifyCartItem item) {
-        return cartManager.modify(user, item);
+        return cartItemManager.modifyItem(user.id(), item);
     }
 
     public void deleteCartItem(User user, Long cartItemId) {
-        cartManager.deleteItem(user, cartItemId);
-    }
-
-    public CreatedSharedCart createSharedCart(User user, CreateSharedCart command) {
-        return cartManager.createSharedCart(user, command);
-    }
-
-    public List<SharedCartSummary> getSharedCarts(User user) {
-        return cartReader.getSharedCarts(user);
-    }
-
-    public SharedCart getSharedCart(User user, Long cartId) {
-        return cartReader.getSharedCart(user, cartId);
-    }
-
-    public Long acceptSharedCart(User user, String accessKey) {
-        return cartManager.acceptSharedCart(user, accessKey);
-    }
-
-    public void deleteSharedCart(User user, Long cartId) {
-        cartManager.deleteSharedCart(user, cartId);
+        cartItemManager.deleteItem(user.id(), cartItemId);
     }
 }

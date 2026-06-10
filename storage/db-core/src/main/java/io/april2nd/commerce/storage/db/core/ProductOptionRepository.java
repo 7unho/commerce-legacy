@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ProductOptionRepository extends JpaRepository<ProductOptionEntity, Long> {
     List<ProductOptionEntity> findByProductIdAndStatusOrderByPriorityAsc(Long productId, EntityStatus status);
+    List<ProductOptionEntity> findByIdInAndStatus(List<Long> productids, EntityStatus status);
 }
