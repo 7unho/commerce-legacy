@@ -36,7 +36,12 @@ public enum ErrorType {
     REVIEW_HAS_NOT_ORDER(HttpStatus.BAD_REQUEST, ErrorCode.E7000, "리뷰 작성 가능한 주문이 없습니다.", LogLevel.INFO),
     REVIEW_ALREADY_REVIEWED(HttpStatus.BAD_REQUEST, ErrorCode.E7001, "이미 리뷰를 작성한 상품입니다.", LogLevel.INFO),
     REVIEW_CANNOT_DELETE_ALL_IMAGES(HttpStatus.BAD_REQUEST, ErrorCode.E7003, "이미지 리뷰는 이미지를 모두 삭제할 수 없습니다.", LogLevel.INFO),
-    REVIEW_UPDATE_EXPIRED(HttpStatus.BAD_REQUEST, ErrorCode.E7002, "리뷰를 수정 기간이 만료 되었습니다.", LogLevel.INFO);
+    REVIEW_UPDATE_EXPIRED(HttpStatus.BAD_REQUEST, ErrorCode.E7002, "리뷰를 수정 기간이 만료 되었습니다.", LogLevel.INFO),
+
+    // 장바구니
+    CART_EXPIRED(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "만료된 장바구니입니다.", LogLevel.INFO),
+    CART_ACCESS_DENIED(HttpStatus.FORBIDDEN, ErrorCode.E8001, "장바구니에 접근할 수 없습니다.", LogLevel.INFO),
+    CART_INVALID_SHARE_TOKEN(HttpStatus.BAD_REQUEST, ErrorCode.E8002, "유효하지 않은 공유 장바구니 링크입니다.", LogLevel.INFO);
 
     private final HttpStatus status;
     private final ErrorCode code;
