@@ -3,8 +3,6 @@ package io.april2nd.commerce.core.domain;
 import io.april2nd.commerce.core.enums.EntityStatus;
 import io.april2nd.commerce.storage.db.core.CartItemEntity;
 import io.april2nd.commerce.storage.db.core.CartItemRepository;
-import io.april2nd.commerce.storage.db.core.ProductEntity;
-import io.april2nd.commerce.storage.db.core.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,17 +14,17 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartReader {
     private final CartItemRepository cartItemRepository;
-    private final ProductRepository productRepository;
+    private final ProductFinder productFinder;
 
     public Cart getCart(User user) {
         List<CartItemEntity> items = cartItemRepository.findByUserIdAndStatus(user.id(), EntityStatus.ACTIVE);
-        Map<Long, ProductEntity> productMap = productRepository.findAllById(
+        Map<Long, Product> productMap = productFinder.findAll(
                         items.stream()
                                 .map(CartItemEntity::getProductId)
-                                .collect(Collectors.toSet())
+                                .collect(Collectors.toList())
                 ).stream()
                 .collect(Collectors.toMap(
-                        ProductEntity::getId,
+                        Product::id,
                         it -> it
                 ));
 
@@ -37,19 +35,7 @@ public class CartReader {
                         .map(it ->
                                 new CartItem(
                                         it.getId(),
-                                        new Product(
-                                                productMap.get(it.getProductId()).getId(),
-                                                productMap.get(it.getProductId()).getName(),
-                                                productMap.get(it.getProductId()).getThumbnailUrl(),
-                                                productMap.get(it.getProductId()).getDescription(),
-                                                productMap.get(it.getProductId()).getShortDescription(),
-                                                new Price(
-                                                        productMap.get(it.getProductId()).getCostPrice(),
-                                                        productMap.get(it.getProductId()).getSalesPrice(),
-                                                        productMap.get(it.getProductId()).getDiscountedPrice()
-                                                ),
-                                                productMap.get(it.getProductId()).getUpdatedAt()
-                                        ),
+                                        productMap.get(it.getProductId()),
                                         it.getQuantity()
                                 )
                         )
