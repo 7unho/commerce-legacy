@@ -35,9 +35,6 @@ class CartControllerTest {
     @Mock
     private CartService cartService;
 
-    @Mock
-    private SharedCartService sharedCartService;
-
     @Test
     @DisplayName("장바구니를 조회한다")
     void get_cart() {
@@ -112,7 +109,7 @@ class CartControllerTest {
         User user = new User(1L);
         CreateSharedCartRequest request = new CreateSharedCartRequest("공유 장바구니");
         LocalDateTime expiredAt = LocalDateTime.now().plusDays(7);
-        given(sharedCartService.create(eq(user), any(CreateSharedCart.class)))
+        given(cartService.createSharedCart(eq(user), any(CreateSharedCart.class)))
                 .willReturn(new CreatedSharedCart(1L, "access-key", expiredAt));
 
         // when
@@ -121,7 +118,7 @@ class CartControllerTest {
         // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
         assertThat(response.getData().cartId()).isEqualTo(1L);
-        verify(sharedCartService).create(eq(user), any(CreateSharedCart.class));
+        verify(cartService).createSharedCart(eq(user), any(CreateSharedCart.class));
     }
 
     @Test
@@ -130,7 +127,7 @@ class CartControllerTest {
         // given
         User user = new User(2L);
         String accessKey = "access-key";
-        given(sharedCartService.accept(user, accessKey)).willReturn(1L);
+        given(cartService.acceptSharedCart(user, accessKey)).willReturn(1L);
 
         // when
         ApiResponse<AcceptSharedCartResponse> response = cartController.acceptSharedCart(user, accessKey);
@@ -138,6 +135,6 @@ class CartControllerTest {
         // then
         assertThat(response.getResult()).isEqualTo(ResultType.SUCCESS);
         assertThat(response.getData().cartId()).isEqualTo(1L);
-        verify(sharedCartService).accept(user, accessKey);
+        verify(cartService).acceptSharedCart(user, accessKey);
     }
 }

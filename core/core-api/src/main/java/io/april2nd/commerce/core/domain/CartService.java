@@ -3,6 +3,8 @@ package io.april2nd.commerce.core.domain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class CartService {
@@ -22,6 +24,26 @@ public class CartService {
     }
 
     public void deleteCartItem(User user, Long cartItemId) {
-        cartManager.delete(user, cartItemId);
+        cartManager.deleteItem(user, cartItemId);
+    }
+
+    public CreatedSharedCart createSharedCart(User user, CreateSharedCart command) {
+        return cartManager.createSharedCart(user, command);
+    }
+
+    public List<SharedCartSummary> getSharedCarts(User user) {
+        return cartReader.getSharedCarts(user);
+    }
+
+    public SharedCart getSharedCart(User user, Long cartId) {
+        return cartReader.getSharedCart(user, cartId);
+    }
+
+    public Long acceptSharedCart(User user, String accessKey) {
+        return cartManager.acceptSharedCart(user, accessKey);
+    }
+
+    public void deleteSharedCart(User user, Long cartId) {
+        cartManager.deleteSharedCart(user, cartId);
     }
 }

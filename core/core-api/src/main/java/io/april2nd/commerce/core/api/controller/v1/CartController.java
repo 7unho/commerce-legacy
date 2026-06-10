@@ -11,7 +11,6 @@ import io.april2nd.commerce.core.api.controller.v1.response.SharedCartSummaryRes
 import io.april2nd.commerce.core.domain.Cart;
 import io.april2nd.commerce.core.domain.CartService;
 import io.april2nd.commerce.core.domain.CreatedSharedCart;
-import io.april2nd.commerce.core.domain.SharedCartService;
 import io.april2nd.commerce.core.domain.User;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartController {
     private final CartService cartService;
-    private final SharedCartService sharedCartService;
 
     @GetMapping("/v1/cart")
     ApiResponse<CartResponse> getCart(User user) {
@@ -68,18 +66,18 @@ public class CartController {
     ApiResponse<CreateSharedCartResponse> createSharedCart(
             User user,
             @RequestBody CreateSharedCartRequest request) {
-        CreatedSharedCart cart = sharedCartService.create(user, request.toCreateSharedCart());
+        CreatedSharedCart cart = cartService.createSharedCart(user, request.toCreateSharedCart());
         return ApiResponse.success(CreateSharedCartResponse.of(cart));
     }
 
     @GetMapping("/v1/shared-carts")
     ApiResponse<List<SharedCartSummaryResponse>> getSharedCarts(User user) {
-        return ApiResponse.success(SharedCartSummaryResponse.of(sharedCartService.getSharedCarts(user)));
+        return ApiResponse.success(SharedCartSummaryResponse.of(cartService.getSharedCarts(user)));
     }
 
     @GetMapping("/v1/shared-carts/{cartId}")
     ApiResponse<SharedCartResponse> getSharedCart(User user, @PathVariable Long cartId) {
-        return ApiResponse.success(SharedCartResponse.of(sharedCartService.getSharedCart(user, cartId)));
+        return ApiResponse.success(SharedCartResponse.of(cartService.getSharedCart(user, cartId)));
     }
 
     @PostMapping("/v1/cart/{accessKey}/access")
@@ -87,13 +85,13 @@ public class CartController {
             User user,
             @PathVariable String accessKey) {
         return ApiResponse.success(new AcceptSharedCartResponse(
-                sharedCartService.accept(user, accessKey)
+                cartService.acceptSharedCart(user, accessKey)
         ));
     }
 
     @DeleteMapping("/v1/shared-carts/{cartId}")
     ApiResponse<Void> deleteSharedCart(User user, @PathVariable Long cartId) {
-        sharedCartService.delete(user, cartId);
+        cartService.deleteSharedCart(user, cartId);
         return ApiResponse.success();
     }
 }

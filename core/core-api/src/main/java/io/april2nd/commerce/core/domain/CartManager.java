@@ -7,11 +7,15 @@ import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.CartEntity;
 import io.april2nd.commerce.storage.db.core.CartItemEntity;
 import io.april2nd.commerce.storage.db.core.CartItemRepository;
+import io.april2nd.commerce.storage.db.core.CartMemberEntity;
 import io.april2nd.commerce.storage.db.core.CartMemberRepository;
 import io.april2nd.commerce.storage.db.core.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -65,13 +69,68 @@ public class CartManager {
     }
 
     @Transactional
-    public void delete(User user, Long cartItemId) {
+    public void deleteItem(User user, Long cartItemId) {
         CartItemEntity entity = cartItemRepository.findByIdAndStatus(cartItemId, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
         CartEntity cart = getActiveCart(entity.getCartId());
         validateOwner(user, cart);
         validateNotExpired(cart);
         entity.delete();
+    }
+
+    @Transactional
+    public CreatedSharedCart createSharedCart(User user, CreateSharedCart command) {
+        LocalDateTime now = LocalDateTime.now();
+        CartEntity saved = cartRepository.save(new CartEntity(
+                user.id(),
+                CartType.SHARED,
+                command.name().trim(),
+                UUID.randomUUID().toString(),
+                CartPolicy.SHARED_EXPIRATION_DAYS.expireAt(now)
+        ));
+        return new CreatedSharedCart(saved.getId(), saved.getShareToken(), saved.getExpiredAt());
+    }
+
+    @Transactional
+    public Long acceptSharedCart(User user, String accessKey) {
+        if (accessKey == null || accessKey.isBlank()) {
+            throw new CoreException(ErrorType.CART_INVALID_SHARE_TOKEN);
+        }
+
+        CartEntity cart = cartRepository.findByShareTokenAndTypeAndStatus(
+                        accessKey, CartType.SHARED, EntityStatus.ACTIVE
+                )
+                .orElseThrow(() -> new CoreException(ErrorType.CART_INVALID_SHARE_TOKEN));
+        CartAccess ownerAccess = toOwnerAccess(cart);
+        ownerAccess.validateNotExpired(LocalDateTime.now());
+
+        if (ownerAccess.isAccessibleBy(user)) return ownerAccess.cartId();
+
+        LocalDateTime now = LocalDateTime.now();
+        CartMemberEntity member = cartMemberRepository.findByCartIdAndUserId(cart.getId(), user.id())
+                .orElse(null);
+        if (member == null) {
+            member = cartMemberRepository.save(new CartMemberEntity(cart.getId(), user.id(), now));
+        } else if (member.isDeleted()) {
+            member.accept(now);
+        }
+
+        CartAccess memberAccess = toMemberAccess(cart, member);
+        return memberAccess.cartId();
+    }
+
+    @Transactional
+    public void deleteSharedCart(User user, Long cartId) {
+        CartEntity cart = cartRepository.findByIdAndTypeAndStatus(cartId, CartType.SHARED, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+        CartAccess ownerAccess = toOwnerAccess(cart);
+        ownerAccess.validateUser(user);
+
+        cart.delete();
+        cartMemberRepository.findByCartIdAndStatus(cartId, EntityStatus.ACTIVE)
+                .forEach(CartMemberEntity::delete);
+        cartItemRepository.findByCartIdAndStatus(cartId, EntityStatus.ACTIVE)
+                .forEach(CartItemEntity::delete);
     }
 
     private CartEntity getOrCreatePersonalCart(User user) {
@@ -84,9 +143,8 @@ public class CartManager {
     private CartEntity getAccessibleSharedCart(User user, Long cartId) {
         CartEntity cart = cartRepository.findByIdAndTypeAndStatus(cartId, CartType.SHARED, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
-        boolean accessible = cart.isOwner(user.id())
-                || cartMemberRepository.existsByCartIdAndUserIdAndStatus(cartId, user.id(), EntityStatus.ACTIVE);
-        if (!accessible) throw new CoreException(ErrorType.CART_ACCESS_DENIED);
+        CartAccess access = findAccess(user, cart);
+        access.validate(user, LocalDateTime.now());
         return cart;
     }
 
@@ -101,8 +159,30 @@ public class CartManager {
     }
 
     private void validateNotExpired(CartEntity cart) {
-        if (cart.isExpired(java.time.LocalDateTime.now())) {
-            throw new CoreException(ErrorType.CART_EXPIRED);
-        }
+        toOwnerAccess(cart).validateNotExpired(LocalDateTime.now());
     }
+
+    private CartAccess findAccess(User user, CartEntity cart) {
+        if (cart.isOwner(user.id())) return toOwnerAccess(cart);
+
+        return cartMemberRepository.findByCartIdAndUserId(cart.getId(), user.id())
+                .filter(CartMemberEntity::isActive)
+                .map(member -> toMemberAccess(cart, member))
+                .orElseThrow(() -> new CoreException(ErrorType.CART_ACCESS_DENIED));
+    }
+
+    private CartAccess toOwnerAccess(CartEntity cart) {
+        return new CartAccess(
+                cart.getShareToken(), cart.getId(), cart.getType(), cart.getOwnerId(), cart.getExpiredAt(),
+                cart.getCreatedAt(), cart.getUpdatedAt()
+        );
+    }
+
+    private CartAccess toMemberAccess(CartEntity cart, CartMemberEntity member) {
+        return new CartAccess(
+                cart.getShareToken(), cart.getId(), cart.getType(), member.getUserId(), cart.getExpiredAt(),
+                member.getCreatedAt(), member.getUpdatedAt()
+        );
+    }
+
 }

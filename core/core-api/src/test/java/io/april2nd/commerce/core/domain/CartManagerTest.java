@@ -7,6 +7,7 @@ import io.april2nd.commerce.storage.db.core.BaseEntity;
 import io.april2nd.commerce.storage.db.core.CartEntity;
 import io.april2nd.commerce.storage.db.core.CartItemEntity;
 import io.april2nd.commerce.storage.db.core.CartItemRepository;
+import io.april2nd.commerce.storage.db.core.CartMemberEntity;
 import io.april2nd.commerce.storage.db.core.CartMemberRepository;
 import io.april2nd.commerce.storage.db.core.CartRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,12 +20,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -96,9 +99,10 @@ class CartManagerTest {
         AddCartItem item = new AddCartItem(sharedCart.getId(), 100L, 2L);
         given(cartRepository.findByIdAndTypeAndStatus(sharedCart.getId(), CartType.SHARED, EntityStatus.ACTIVE))
                 .willReturn(Optional.of(sharedCart));
-        given(cartMemberRepository.existsByCartIdAndUserIdAndStatus(
-                sharedCart.getId(), user.id(), EntityStatus.ACTIVE
-        )).willReturn(true);
+        given(cartMemberRepository.findByCartIdAndUserId(sharedCart.getId(), user.id()))
+                .willReturn(Optional.of(new CartMemberEntity(
+                        sharedCart.getId(), user.id(), LocalDateTime.now()
+                )));
         given(cartItemRepository.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         cartManager.add(user, item);
@@ -130,7 +134,7 @@ class CartManagerTest {
         given(cartItemRepository.findByIdAndStatus(item.getId(), EntityStatus.ACTIVE)).willReturn(Optional.of(item));
         given(cartRepository.findById(sharedCart.getId())).willReturn(Optional.of(sharedCart));
 
-        cartManager.delete(user, item.getId());
+        cartManager.deleteItem(user, item.getId());
 
         assertThat(item.getStatus()).isEqualTo(EntityStatus.DELETED);
     }
@@ -146,6 +150,75 @@ class CartManagerTest {
 
         assertThatThrownBy(() -> cartManager.add(user, new AddCartItem(sharedCart.getId(), 100L, 1L)))
                 .isInstanceOf(CoreException.class);
+    }
+
+    @Test
+    @DisplayName("공유 장바구니는 정책에 따라 7일 뒤 만료된다")
+    void createsSharedCartWithSevenDayExpiration() {
+        LocalDateTime before = CartPolicy.SHARED_EXPIRATION_DAYS.expireAt(LocalDateTime.now());
+        given(cartRepository.save(any())).willAnswer(invocation -> entityWithId(invocation.getArgument(0), 10L));
+
+        CreatedSharedCart created = cartManager.createSharedCart(new User(1L), new CreateSharedCart("여행 준비"));
+
+        assertThat(created.cartId()).isEqualTo(10L);
+        assertThat(created.shareToken()).isNotBlank();
+        assertThat(created.expiredAt()).isBetween(
+                before.minusSeconds(1),
+                CartPolicy.SHARED_EXPIRATION_DAYS.expireAt(LocalDateTime.now()).plusSeconds(1)
+        );
+    }
+
+    @Test
+    @DisplayName("이미 접근 권한이 있는 회원의 공유 장바구니 수락은 멱등하게 처리한다")
+    void acceptsSharedCartIdempotently() {
+        User memberUser = new User(2L);
+        CartEntity cart = entityWithId(new CartEntity(
+                1L, CartType.SHARED, "공유", "token", LocalDateTime.now().plusDays(1)
+        ), 10L);
+        CartMemberEntity member = new CartMemberEntity(cart.getId(), memberUser.id(), LocalDateTime.now());
+        given(cartRepository.findByShareTokenAndTypeAndStatus("token", CartType.SHARED, EntityStatus.ACTIVE))
+                .willReturn(Optional.of(cart));
+        given(cartMemberRepository.findByCartIdAndUserId(cart.getId(), memberUser.id()))
+                .willReturn(Optional.of(member));
+
+        Long result = cartManager.acceptSharedCart(memberUser, "token");
+
+        assertThat(result).isEqualTo(cart.getId());
+        verify(cartMemberRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("만료된 공유 장바구니는 수락할 수 없다")
+    void rejectsAcceptWhenCartExpired() {
+        CartEntity cart = entityWithId(new CartEntity(
+                1L, CartType.SHARED, "공유", "token", LocalDateTime.now().minusSeconds(1)
+        ), 10L);
+        given(cartRepository.findByShareTokenAndTypeAndStatus("token", CartType.SHARED, EntityStatus.ACTIVE))
+                .willReturn(Optional.of(cart));
+
+        assertThatThrownBy(() -> cartManager.acceptSharedCart(new User(2L), "token"))
+                .isInstanceOf(CoreException.class);
+    }
+
+    @Test
+    @DisplayName("소유자는 만료된 공유 장바구니와 연관 데이터를 삭제할 수 있다")
+    void ownerCanDeleteExpiredCartAndRelatedData() {
+        User owner = new User(1L);
+        CartEntity cart = entityWithId(new CartEntity(
+                owner.id(), CartType.SHARED, "공유", "token", LocalDateTime.now().minusDays(1)
+        ), 10L);
+        CartMemberEntity member = new CartMemberEntity(cart.getId(), 2L, LocalDateTime.now());
+        CartItemEntity item = new CartItemEntity(cart.getId(), 100L, 1L);
+        given(cartRepository.findByIdAndTypeAndStatus(cart.getId(), CartType.SHARED, EntityStatus.ACTIVE))
+                .willReturn(Optional.of(cart));
+        given(cartMemberRepository.findByCartIdAndStatus(cart.getId(), EntityStatus.ACTIVE)).willReturn(List.of(member));
+        given(cartItemRepository.findByCartIdAndStatus(cart.getId(), EntityStatus.ACTIVE)).willReturn(List.of(item));
+
+        cartManager.deleteSharedCart(owner, cart.getId());
+
+        assertThat(cart.getStatus()).isEqualTo(EntityStatus.DELETED);
+        assertThat(member.getStatus()).isEqualTo(EntityStatus.DELETED);
+        assertThat(item.getStatus()).isEqualTo(EntityStatus.DELETED);
     }
 
     private static <T extends BaseEntity> T entityWithId(T entity, Long id) {
