@@ -57,4 +57,18 @@ public class OrderController {
         Order order = orderAssembler.getOrder(user, orderKey);
         return ApiResponse.success(OrderResponse.of(order));
     }
+
+    @PostMapping("/v1/orders/{orderKey}/invite")
+    ApiResponse<CreateOrderResponse> createInvite(
+            User user,
+            @PathVariable String orderKey) {
+        String inviteKey = orderAssembler.createInvite(user, orderKey);
+        return ApiResponse.success(new CreateOrderResponse(inviteKey));
+    }
+
+    @GetMapping("/v1/order-invites/{inviteKey}")
+    ApiResponse<OrderResponse> getOrderByInviteKey(@PathVariable String inviteKey) {
+        Order order = orderAssembler.getOrderByInviteKey(inviteKey);
+        return ApiResponse.success(OrderResponse.of(order));
+    }
 }

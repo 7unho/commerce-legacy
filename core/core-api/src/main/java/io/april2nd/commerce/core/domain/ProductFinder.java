@@ -90,10 +90,10 @@ public class ProductFinder {
                 .collect(Collectors.toList());
     }
 
-    public List<Product> findActive(Collection<Long> productIds) {
+    public List<Product> find(Collection<Long> productIds, EntityStatus status) {
         if (productIds.isEmpty()) return Collections.emptyList();
 
-        return productRepository.findByIdInAndStatus(productIds, EntityStatus.ACTIVE)
+        return productRepository.findByIdInAndStatus(productIds, status)
                 .stream()
                 .map(it -> new Product(
                         it.getId(),

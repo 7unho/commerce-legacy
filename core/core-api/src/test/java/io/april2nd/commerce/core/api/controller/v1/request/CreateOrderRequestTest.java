@@ -13,20 +13,12 @@ import static org.assertj.core.api.Assertions.tuple;
 
 class CreateOrderRequestTest {
     @Test
-    void convertsProductsAndOptionsToNewOrderItems() {
+    void convertsTargetsToNewOrderItems() {
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(
-                        new CreateOrderRequest.OrderProductRequest(
-                                100L,
-                                List.of(
-                                        new CreateOrderRequest.OrderOptionRequest(1000L, 1L),
-                                        new CreateOrderRequest.OrderOptionRequest(1001L, 2L)
-                                )
-                        ),
-                        new CreateOrderRequest.OrderProductRequest(
-                                200L,
-                                List.of(new CreateOrderRequest.OrderOptionRequest(2000L, 3L))
-                        )
+                        new CreateOrderRequest.CreateOrderTarget(100L, 1000L, 1L),
+                        new CreateOrderRequest.CreateOrderTarget(100L, 1001L, 2L),
+                        new CreateOrderRequest.CreateOrderTarget(200L, 2000L, 3L)
                 )
         );
 
@@ -43,18 +35,8 @@ class CreateOrderRequestTest {
     }
 
     @Test
-    void rejectsEmptyProducts() {
+    void rejectsEmptyTargets() {
         CreateOrderRequest request = new CreateOrderRequest(List.of());
-
-        assertThatThrownBy(() -> request.toNewOrder(new User(1L)))
-                .isInstanceOf(CoreException.class);
-    }
-
-    @Test
-    void rejectsProductWithoutOptions() {
-        CreateOrderRequest request = new CreateOrderRequest(
-                List.of(new CreateOrderRequest.OrderProductRequest(100L, List.of()))
-        );
 
         assertThatThrownBy(() -> request.toNewOrder(new User(1L)))
                 .isInstanceOf(CoreException.class);
@@ -63,12 +45,7 @@ class CreateOrderRequestTest {
     @Test
     void rejectsNonPositiveQuantity() {
         CreateOrderRequest request = new CreateOrderRequest(
-                List.of(
-                        new CreateOrderRequest.OrderProductRequest(
-                                100L,
-                                List.of(new CreateOrderRequest.OrderOptionRequest(1000L, 0L))
-                        )
-                )
+                List.of(new CreateOrderRequest.CreateOrderTarget(100L, 1000L, 0L))
         );
 
         assertThatThrownBy(() -> request.toNewOrder(new User(1L)))

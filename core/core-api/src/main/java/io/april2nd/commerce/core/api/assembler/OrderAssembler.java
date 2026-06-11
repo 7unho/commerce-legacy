@@ -50,4 +50,12 @@ public class OrderAssembler {
     public Order getOrder(User user, String orderKey) {
         return orderService.getOrder(user, orderKey, OrderState.PAID);
     }
+
+    public String createInvite(User user, String orderKey) {
+        return orderService.createInvite(user, orderKey);
+    }
+
+    public Order getOrderByInviteKey(String inviteKey) {
+        return orderService.getOrderByInviteKey(inviteKey);
+    }
 }
