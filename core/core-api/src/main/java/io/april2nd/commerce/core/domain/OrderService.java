@@ -1,5 +1,6 @@
 package io.april2nd.commerce.core.domain;
 
+import io.april2nd.commerce.core.enums.EntityStatus;
 import io.april2nd.commerce.core.enums.OrderState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,14 +18,20 @@ public class OrderService {
     private final OrderManager orderManager;
     private final OrderReader orderReader;
     private final ProductFinder productFinder;
+    private final ProductOptionFinder productOptionFinder;
 
     public String create(User user, NewOrder newOrder) {
-        List<Long> orderProductIds = newOrder.items().stream()
-                .map(NewOrderItem::productId)
+        List<Long> productOptionIds = newOrder.items().stream()
+                .map(NewOrderItem::productOptionId)
+                .collect(Collectors.toList());
+        List<ProductOption> productOptions = productOptionFinder.find(productOptionIds, EntityStatus.ACTIVE);
+        List<Long> orderProductIds = productOptions.stream()
+                .map(ProductOption::productId)
+                .distinct()
                 .collect(Collectors.toList());
         List<Product> products = productFinder.findActive(orderProductIds);
 
-        return orderManager.create(user.id(), newOrder, products);
+        return orderManager.create(user.id(), newOrder, products, productOptions);
     }
 
     public Order getOrder(User user, String orderKey, OrderState state) {

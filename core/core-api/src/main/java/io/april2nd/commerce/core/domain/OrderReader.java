@@ -40,9 +40,12 @@ public class OrderReader {
                         .map(it -> new OrderItem(
                                 order.getId(),
                                 it.getProductId(),
+                                it.getProductOptionId(),
                                 it.getProductName(),
+                                it.getProductOptionName(),
                                 it.getThumbnailUrl(),
                                 it.getShortDescription(),
+                                it.getProductOptionDescription(),
                                 it.getQuantity(),
                                 it.getUnitPrice(),
                                 it.getTotalPrice()

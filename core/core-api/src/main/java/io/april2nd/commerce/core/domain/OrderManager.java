@@ -25,9 +25,9 @@ public class OrderManager {
     private final OrderItemRepository orderItemRepository;
 
     @Transactional
-    public String create(Long userId, NewOrder newOrder, List<Product> products) {
-        if (products.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
-        if (products.size() != newOrder.items().stream().map(NewOrderItem::productId).distinct().count()) {
+    public String create(Long userId, NewOrder newOrder, List<Product> products, List<ProductOption> productOptions) {
+        if (productOptions.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
+        if (productOptions.size() != newOrder.items().stream().map(NewOrderItem::productOptionId).distinct().count()) {
             throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
         }
 
@@ -37,11 +37,27 @@ public class OrderManager {
                         Function.identity()
                 ));
 
+        if (productOptions.stream().anyMatch(it -> !productMap.containsKey(it.productId()))) {
+            throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
+        }
+
+        Map<Long, ProductOption> productOptionMap = productOptions.stream()
+                .collect(Collectors.toMap(
+                        ProductOption::id,
+                        Function.identity()
+                ));
+        if (newOrder.items().stream().anyMatch(item -> {
+            ProductOption productOption = productOptionMap.get(item.productOptionId());
+            return productOption == null || !productOption.productId().equals(item.productId());
+        })) {
+            throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
+        }
+
         OrderEntity order = new OrderEntity(
                 userId,
                 orderKeyGenerator.generate(),
-                createOrderName(newOrder.items(), productMap),
-                calculateTotalPrice(newOrder.items(), productMap),
+                createOrderName(newOrder.items(), productMap, productOptionMap),
+                calculateTotalPrice(newOrder.items(), productOptionMap),
                 OrderState.CREATED
         );
 
@@ -50,17 +66,21 @@ public class OrderManager {
         orderItemRepository.saveAll(
                 newOrder.items().stream()
                         .map(it -> {
-                            Product product = productMap.get(it.productId());
+                            ProductOption productOption = productOptionMap.get(it.productOptionId());
+                            Product product = productMap.get(productOption.productId());
 
                             return new OrderItemEntity(
                                     saved.getId(),
                                     product.id(),
+                                    productOption.id(),
                                     product.name(),
+                                    productOption.name(),
                                     product.thumbnailUrl(),
                                     product.shortDescription(),
+                                    productOption.description(),
                                     it.quantity(),
-                                    product.price().discountedPrice(),
-                                    product.price().discountedPrice().multiply(BigDecimal.valueOf(it.quantity()))
+                                    productOption.price().discountedPrice(),
+                                    productOption.price().discountedPrice().multiply(BigDecimal.valueOf(it.quantity()))
                             );
                         })
                         .collect(Collectors.toList())
@@ -69,23 +89,28 @@ public class OrderManager {
         return saved.getOrderKey();
     }
 
-    private BigDecimal calculateTotalPrice(List<NewOrderItem> items, Map<Long, Product> productMap) {
+    private BigDecimal calculateTotalPrice(List<NewOrderItem> items, Map<Long, ProductOption> productOptionMap) {
         return items.stream()
                 .map(item -> {
-                    Product product = productMap.get(item.productId());
+                    ProductOption productOption = productOptionMap.get(item.productOptionId());
 
-                    if (product == null) throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
+                    if (productOption == null) throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
 
-                    return product.price().discountedPrice()
+                    return productOption.price().discountedPrice()
                             .multiply(BigDecimal.valueOf(item.quantity()));
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private String createOrderName(List<NewOrderItem> items, Map<Long, Product> productMap) {
+    private String createOrderName(
+            List<NewOrderItem> items,
+            Map<Long, Product> productMap,
+            Map<Long, ProductOption> productOptionMap
+    ) {
         NewOrderItem first = items.stream().findFirst().orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
-        Product product = productMap.get(first.productId());
+        ProductOption productOption = productOptionMap.get(first.productOptionId());
+        Product product = productOption == null ? null : productMap.get(productOption.productId());
 
         if (product == null) throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
 

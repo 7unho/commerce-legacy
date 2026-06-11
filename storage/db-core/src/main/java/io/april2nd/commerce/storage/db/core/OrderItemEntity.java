@@ -17,9 +17,12 @@ import java.math.BigDecimal;
 public class OrderItemEntity extends BaseEntity {
     private Long orderId;
     private Long productId;
+    private Long productOptionId;
     private String productName;
+    private String productOptionName;
     private String thumbnailUrl;
     private String shortDescription;
+    private String productOptionDescription;
     private Long quantity;
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;

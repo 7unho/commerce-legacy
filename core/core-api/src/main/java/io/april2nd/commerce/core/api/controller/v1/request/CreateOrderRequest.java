@@ -10,13 +10,14 @@ import java.util.List;
 
 public record CreateOrderRequest(
         Long productId,
+        Long productOptionId,
         Long quantity
 ) {
     public NewOrder toNewOrder(User user) {
         if (quantity <= 0) throw new CoreException(ErrorType.INVALID_REQUEST);
         return new NewOrder(
                 user.id(),
-                List.of(new NewOrderItem(productId, quantity))
+                List.of(new NewOrderItem(productId, productOptionId, quantity))
         );
     }
 }
