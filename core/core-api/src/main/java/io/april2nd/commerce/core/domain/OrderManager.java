@@ -37,21 +37,11 @@ public class OrderManager {
                         Function.identity()
                 ));
 
-        if (productOptions.stream().anyMatch(it -> !productMap.containsKey(it.productId()))) {
-            throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
-        }
-
         Map<Long, ProductOption> productOptionMap = productOptions.stream()
                 .collect(Collectors.toMap(
                         ProductOption::id,
                         Function.identity()
                 ));
-        if (newOrder.items().stream().anyMatch(item -> {
-            ProductOption productOption = productOptionMap.get(item.productOptionId());
-            return productOption == null || !productOption.productId().equals(item.productId());
-        })) {
-            throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
-        }
 
         OrderEntity order = new OrderEntity(
                 userId,
