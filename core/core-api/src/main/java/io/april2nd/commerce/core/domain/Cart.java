@@ -20,6 +20,7 @@ public record Cart(
                         .filter(it -> targetItemIds.contains(it.id()))
                         .map(it -> new NewOrderItem(
                                 it.product().id(),
+                                it.productOption().id(),
                                 it.quantity()
                         ))
                         .collect(Collectors.toList())

@@ -24,9 +24,12 @@ public record OrderCheckoutResponse(
                 order.items().stream()
                         .map(it -> new OrderItemResponse(
                                 it.productId(),
+                                it.productOptionId(),
                                 it.productName(),
+                                it.productOptionName(),
                                 it.thumbnailUrl(),
                                 it.shortDescription(),
+                                it.productOptionDescription(),
                                 it.quantity(),
                                 it.unitPrice(),
                                 it.totalPrice()

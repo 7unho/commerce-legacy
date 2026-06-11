@@ -11,10 +11,9 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +27,7 @@ public class ProductFinder {
 
         List<Long> productIds = categories.getContent().stream()
                 .map(ProductCategoryEntity::getProductId)
-                .collect(toList());
+                .collect(Collectors.toList());
 
         List<Product> products = productRepository.findAllById(productIds)
                 .stream()
@@ -45,7 +44,7 @@ public class ProductFinder {
                         ),
                         it.getUpdatedAt()
                 ))
-                .collect(toList());
+                .collect(Collectors.toList());
 
         return new Page<>(products, categories.hasNext());
     }
@@ -70,7 +69,7 @@ public class ProductFinder {
         );
     }
 
-    public List<Product> find(List<Long> productIds) {
+    public List<Product> find(Collection<Long> productIds) {
         if (productIds.isEmpty()) return Collections.emptyList();
 
         return productRepository.findAllById(productIds)
@@ -88,7 +87,28 @@ public class ProductFinder {
                         ),
                         it.getUpdatedAt()
                 ))
-                .collect(toList());
+                .collect(Collectors.toList());
+    }
+
+    public List<Product> findActive(Collection<Long> productIds) {
+        if (productIds.isEmpty()) return Collections.emptyList();
+
+        return productRepository.findByIdInAndStatus(productIds, EntityStatus.ACTIVE)
+                .stream()
+                .map(it -> new Product(
+                        it.getId(),
+                        it.getName(),
+                        it.getThumbnailUrl(),
+                        it.getDescription(),
+                        it.getShortDescription(),
+                        new Price(
+                                it.getCostPrice(),
+                                it.getSalesPrice(),
+                                it.getDiscountedPrice()
+                        ),
+                        it.getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
     }
 
     public List<ProductSection> findSections(Long productId) {
