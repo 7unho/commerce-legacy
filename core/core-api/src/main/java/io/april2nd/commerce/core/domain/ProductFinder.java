@@ -72,6 +72,27 @@ public class ProductFinder {
     public List<Product> find(Collection<Long> productIds) {
         if (productIds.isEmpty()) return Collections.emptyList();
 
+        return productRepository.findAllById(productIds)
+                .stream()
+                .map(it -> new Product(
+                        it.getId(),
+                        it.getName(),
+                        it.getThumbnailUrl(),
+                        it.getDescription(),
+                        it.getShortDescription(),
+                        new Price(
+                                it.getCostPrice(),
+                                it.getSalesPrice(),
+                                it.getDiscountedPrice()
+                        ),
+                        it.getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<Product> findActive(Collection<Long> productIds) {
+        if (productIds.isEmpty()) return Collections.emptyList();
+
         return productRepository.findByIdInAndStatus(productIds, EntityStatus.ACTIVE)
                 .stream()
                 .map(it -> new Product(

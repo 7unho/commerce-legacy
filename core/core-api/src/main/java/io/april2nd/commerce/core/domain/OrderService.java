@@ -1,8 +1,6 @@
 package io.april2nd.commerce.core.domain;
 
 import io.april2nd.commerce.core.enums.OrderState;
-import io.april2nd.commerce.core.support.error.CoreException;
-import io.april2nd.commerce.core.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,11 +19,10 @@ public class OrderService {
     private final ProductFinder productFinder;
 
     public String create(User user, NewOrder newOrder) {
-        List<Long> orderProductIds = newOrder.items().stream().map(NewOrderItem::productId).collect(Collectors.toList());
-        List<Product> products = productFinder.find(orderProductIds);
-
-        if (products.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
-        if (products.size() != orderProductIds.stream().distinct().count()) throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
+        List<Long> orderProductIds = newOrder.items().stream()
+                .map(NewOrderItem::productId)
+                .collect(Collectors.toList());
+        List<Product> products = productFinder.findActive(orderProductIds);
 
         return orderManager.create(user.id(), newOrder, products);
     }
