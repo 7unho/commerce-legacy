@@ -9,52 +9,29 @@ import io.april2nd.commerce.core.support.error.ErrorType;
 import java.util.List;
 
 public record CreateOrderRequest(
-        List<OrderProductRequest> products
+        List<CreateOrderTarget> targets
 ) {
     public NewOrder toNewOrder(User user) {
-        if (products == null || products.isEmpty()) {
-            throw new CoreException(ErrorType.INVALID_REQUEST);
-        }
+        if (targets.isEmpty()) throw new CoreException(ErrorType.INVALID_REQUEST);
+        if (targets.stream().anyMatch(it -> it.quantity <= 0)) throw new CoreException(ErrorType.INVALID_REQUEST);
 
         return new NewOrder(
                 user.id(),
-                products.stream()
-                        .flatMap(product -> {
-                            if (product == null) throw new CoreException(ErrorType.INVALID_REQUEST);
-                            return product.toNewOrderItems().stream();
-                        })
+                targets.stream()
+                        .map(it ->
+                                new NewOrderItem(
+                                        it.productId,
+                                        it.productOptionId,
+                                        it.quantity
+                                )
+                        )
                         .toList()
         );
     }
 
-    public record OrderProductRequest(
+    public record CreateOrderTarget(
             Long productId,
-            List<OrderOptionRequest> options
-    ) {
-        private List<NewOrderItem> toNewOrderItems() {
-            if (productId == null || options == null || options.isEmpty()) {
-                throw new CoreException(ErrorType.INVALID_REQUEST);
-            }
-
-            return options.stream()
-                    .map(option -> {
-                        if (option == null) throw new CoreException(ErrorType.INVALID_REQUEST);
-                        return option.toNewOrderItem(productId);
-                    })
-                    .toList();
-        }
-    }
-
-    public record OrderOptionRequest(
             Long productOptionId,
             Long quantity
-    ) {
-        private NewOrderItem toNewOrderItem(Long productId) {
-            if (productOptionId == null || quantity == null || quantity <= 0) {
-                throw new CoreException(ErrorType.INVALID_REQUEST);
-            }
-
-            return new NewOrderItem(productId, productOptionId, quantity);
-        }
-    }
+    ) {}
 }

@@ -17,19 +17,18 @@ public class OrderService {
     private final OrderFinder orderFinder;
     private final OrderManager orderManager;
     private final OrderReader orderReader;
+    private final OrderInviteReader orderInviteReader;
+    private final OrderInviteManager orderInviteManager;
     private final ProductFinder productFinder;
     private final ProductOptionFinder productOptionFinder;
 
     public String create(User user, NewOrder newOrder) {
-        List<Long> productOptionIds = newOrder.items().stream()
-                .map(NewOrderItem::productOptionId)
-                .collect(Collectors.toList());
-        List<ProductOption> productOptions = productOptionFinder.find(productOptionIds, EntityStatus.ACTIVE);
+        List<ProductOption> productOptions = productOptionFinder.find(newOrder.productOptionIds(), EntityStatus.ACTIVE);
         List<Long> orderProductIds = productOptions.stream()
                 .map(ProductOption::productId)
                 .distinct()
                 .collect(Collectors.toList());
-        List<Product> products = productFinder.findActive(orderProductIds);
+        List<Product> products = productFinder.find(orderProductIds, EntityStatus.ACTIVE);
 
         return orderManager.create(user.id(), newOrder, products, productOptions);
     }
@@ -44,5 +43,14 @@ public class OrderService {
 
     public Map<Long, Long> recentCount(Collection<Long> productIds, LocalDateTime from) {
         return orderFinder.countOrdersByProductIds(productIds, from);
+    }
+
+    public String createInvite(User user, String orderKey) {
+        Order order = orderReader.getOrder(user, orderKey, OrderState.CREATED);
+        return orderInviteManager.create(order.id());
+    }
+
+    public Order getOrderByInviteKey(String inviteKey) {
+        return orderInviteReader.getOrderByInviteKey(inviteKey);
     }
 }

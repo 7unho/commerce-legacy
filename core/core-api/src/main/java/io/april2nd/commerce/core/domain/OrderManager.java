@@ -27,7 +27,7 @@ public class OrderManager {
     @Transactional
     public String create(Long userId, NewOrder newOrder, List<Product> products, List<ProductOption> productOptions) {
         if (productOptions.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
-        if (productOptions.size() != newOrder.items().stream().map(NewOrderItem::productOptionId).distinct().count()) {
+        if (productOptions.size() != newOrder.productOptionIds().stream().distinct().count()) {
             throw new CoreException(ErrorType.PRODUCT_MISMATCH_IN_ORDER);
         }
 
