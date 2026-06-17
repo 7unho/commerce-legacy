@@ -28,7 +28,7 @@ public class PaymentValidator {
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
         if (payment.getState() != PaymentState.READY) throw new CoreException(ErrorType.PAYMENT_INVALID_STATE);
-        if (payment.getPaidAmount() != amount) throw new CoreException(ErrorType.PAYMENT_AMOUNT_MISMATCH);
+        if (payment.getPaidAmount().compareTo(amount) != 0) throw new CoreException(ErrorType.PAYMENT_AMOUNT_MISMATCH);
     }
 
     public void validateForFail(String orderKey) {
