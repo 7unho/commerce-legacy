@@ -14,6 +14,7 @@ public class PaymentService {
     private final PaymentCreator paymentCreator;
     private final PaymentManager paymentManager;
     private final TransactionHistoryAppender transactionHistoryAppender;
+    private final PaymentPostProcessor paymentPostProcessor;
 
     public Long createPayment(Order order, PaymentDiscount paymentDiscount) {
         return paymentCreator.create(order, paymentDiscount);
@@ -37,6 +38,8 @@ public class PaymentService {
                 "결제 성공",
                 Objects.requireNonNull(payment.paidAt())
         );
+
+        paymentPostProcessor.process(payment.userId(), orderKey);
 
         return payment.id();
     }
