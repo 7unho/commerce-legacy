@@ -79,7 +79,7 @@ public class PaymentProcessor {
                         BigDecimal.valueOf(-1),
                         BigDecimal.valueOf(-1),
                         BigDecimal.valueOf(-1),
-                        "[$s] $s".formatted(code, message),
+                        "[%s] %s".formatted(code, message),
                         LocalDateTime.now()
                 )
         );
