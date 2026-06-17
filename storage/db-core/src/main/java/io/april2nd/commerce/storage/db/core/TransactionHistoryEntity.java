@@ -27,7 +27,9 @@ public class TransactionHistoryEntity extends BaseEntity {
     private Long orderId;
     private Long paymentId;
     private String externalPaymentKey;
-    private BigDecimal amount;
+    private BigDecimal paidAmount;
+    private BigDecimal pointAmount;
+    private BigDecimal couponAmount;
     private String message;
     private LocalDateTime occurredAt;
 }

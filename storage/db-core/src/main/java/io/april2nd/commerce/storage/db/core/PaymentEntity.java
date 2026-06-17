@@ -25,6 +25,7 @@ public class PaymentEntity extends BaseEntity {
     private Long ownedCouponId;
     private BigDecimal couponDiscount;
     private BigDecimal usedPoint;
+    private Long payerId;
     private BigDecimal paidAmount;
 
     @Enumerated(EnumType.STRING)
@@ -47,6 +48,7 @@ public class PaymentEntity extends BaseEntity {
             Long ownedCouponId,
             BigDecimal couponDiscount,
             BigDecimal usedPoint,
+            Long payerId,
             BigDecimal paidAmount,
             PaymentState state,
             String externalPaymentKey,
@@ -60,6 +62,7 @@ public class PaymentEntity extends BaseEntity {
         this.ownedCouponId = ownedCouponId;
         this.couponDiscount = couponDiscount;
         this.usedPoint = usedPoint;
+        this.payerId = payerId;
         this.paidAmount = paidAmount;
         this.state = state;
         this.externalPaymentKey = externalPaymentKey;

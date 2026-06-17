@@ -15,13 +15,12 @@ public class PaymentCreator {
     private final PaymentRepository paymentRepository;
 
     @Transactional
-    public Long create(Order order, PaymentDiscount paymentDiscount) {
+    public Long create(User payer, Order order, PaymentDiscount paymentDiscount) {
         PaymentEntity found = paymentRepository.findByOrderId(order.id())
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
-        if (found.getState() == PaymentState.SUCCESS) {
-            throw new CoreException(ErrorType.ORDER_ALREADY_PAID);
-        }
+        if (found.getState() == PaymentState.SUCCESS) throw new CoreException(ErrorType.ORDER_ALREADY_PAID);
+
 
         PaymentEntity payment = PaymentEntity.builder()
                 .userId(order.userId())
@@ -30,6 +29,7 @@ public class PaymentCreator {
                 .ownedCouponId(paymentDiscount.getUseOwnedCouponId())
                 .couponDiscount(paymentDiscount.getCouponDiscount())
                 .usedPoint(paymentDiscount.getUsePoint())
+                .payerId(payer.id())
                 .paidAmount(paymentDiscount.paidAmount(order.totalPrice()))
                 .state(PaymentState.READY)
                 .build();

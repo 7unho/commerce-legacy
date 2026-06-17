@@ -70,6 +70,8 @@ public class CancelService {
                         payment.getId(),
                         Objects.requireNonNull(payment.getExternalPaymentKey()),
                         payment.getPaidAmount(),
+                        payment.getUsedPoint(),
+                        payment.getCouponDiscount(),
                         "취소 성공",
                         cancel.getCanceledAt()
                 )
