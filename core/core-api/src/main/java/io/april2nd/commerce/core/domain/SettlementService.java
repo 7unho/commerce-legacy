@@ -27,7 +27,6 @@ public class SettlementService {
     private static final Logger log = LoggerFactory.getLogger(SettlementService.class);
 
     private PaymentRepository paymentRepository;
-    private CancleRepository cancleRepository;
     private SettlementTargetRepository settlementTargetRepository;
     private SettlementRepository settlementRepository;
     private SettlementTargetLoader settlementTargetLoader;
