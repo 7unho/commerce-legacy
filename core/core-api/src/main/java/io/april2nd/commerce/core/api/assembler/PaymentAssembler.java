@@ -1,5 +1,6 @@
 package io.april2nd.commerce.core.api.assembler;
 
+import io.april2nd.commerce.core.api.controller.v1.request.CreateInvitePaymentRequest;
 import io.april2nd.commerce.core.api.controller.v1.request.CreatePaymentRequest;
 import io.april2nd.commerce.core.domain.*;
 import io.april2nd.commerce.core.enums.OrderState;
@@ -29,8 +30,19 @@ public class PaymentAssembler {
         PointBalance pointBalance = pointService.balance(user);
         
         return paymentService.createPayment(
+                user,
                 order,
                 request.toPaymentDiscount(ownedCoupons, pointBalance)
+        );
+    }
+
+    public Long createByInvite(User user, CreateInvitePaymentRequest request) {
+        Order order = orderService.getOrderByInviteKey(request.inviteKey());
+
+        return paymentService.createPayment(
+                user,
+                order,
+                PaymentDiscount.EMPTY
         );
     }
 

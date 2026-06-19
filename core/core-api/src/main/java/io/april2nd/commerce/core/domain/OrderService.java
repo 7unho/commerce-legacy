@@ -34,7 +34,7 @@ public class OrderService {
     }
 
     public Order getOrder(User user, String orderKey, OrderState state) {
-        return orderReader.getOrder(user, orderKey, state);
+        return orderReader.getOrder(user.id(), orderKey, state);
     }
 
     public List<OrderSummary> getOrders(User user) {
@@ -46,7 +46,7 @@ public class OrderService {
     }
 
     public String createInvite(User user, String orderKey) {
-        Order order = orderReader.getOrder(user, orderKey, OrderState.CREATED);
+        Order order = orderReader.getOrder(user.id(), orderKey, OrderState.CREATED);
         return orderInviteManager.create(order.id());
     }
 

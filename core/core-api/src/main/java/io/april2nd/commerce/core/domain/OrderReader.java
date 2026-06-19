@@ -21,10 +21,10 @@ public class OrderReader {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
-    public Order getOrder(User user, String orderKey, OrderState state) {
+    public Order getOrder(Long userId, String orderKey, OrderState state) {
         OrderEntity order = orderRepository.findByOrderKeyAndStateAndStatus(orderKey, state, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
-        if (!user.id().equals(order.getUserId())) throw new CoreException(ErrorType.NOT_FOUND_DATA);
+        if (!userId.equals(order.getUserId())) throw new CoreException(ErrorType.NOT_FOUND_DATA);
 
         List<OrderItemEntity> items = orderItemRepository.findByOrderId(order.getId());
         if (items.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
@@ -33,7 +33,7 @@ public class OrderReader {
                 order.getId(),
                 order.getOrderKey(),
                 order.getName(),
-                user.id(),
+                userId,
                 order.getTotalPrice(),
                 order.getState(),
                 items.stream()

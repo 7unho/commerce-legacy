@@ -1,9 +1,10 @@
 package io.april2nd.commerce.core.api.controller.v1;
 
 import io.april2nd.commerce.core.api.assembler.PaymentAssembler;
+import io.april2nd.commerce.core.api.controller.v1.request.CreateInvitePaymentRequest;
 import io.april2nd.commerce.core.api.controller.v1.request.CreatePaymentRequest;
 import io.april2nd.commerce.core.api.controller.v1.response.CreatePaymentResponse;
-import io.april2nd.commerce.core.domain.*;
+import io.april2nd.commerce.core.domain.User;
 import io.april2nd.commerce.core.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,15 @@ public class PaymentController {
             @RequestBody CreatePaymentRequest request) {
 
         Long createdId = paymentAssembler.create(user, request);
+
+        return ApiResponse.success(new CreatePaymentResponse(createdId));
+    }
+
+    @PostMapping("/v1/payments/invite")
+    ApiResponse<CreatePaymentResponse> createByInvite(
+            User user,
+            @RequestBody CreateInvitePaymentRequest request) {
+        Long createdId = paymentAssembler.createByInvite(user, request);
 
         return ApiResponse.success(new CreatePaymentResponse(createdId));
     }
