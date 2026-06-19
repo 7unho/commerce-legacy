@@ -16,11 +16,12 @@ public class PaymentCreator {
 
     @Transactional
     public Long create(User payer, Order order, PaymentDiscount paymentDiscount) {
-        PaymentEntity found = paymentRepository.findByOrderId(order.id())
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+        PaymentEntity found = paymentRepository.findByOrderId(order.id()).orElse(null);
 
-        if (found.getState() == PaymentState.SUCCESS) throw new CoreException(ErrorType.ORDER_ALREADY_PAID);
-
+        if (found != null) {
+            if (found.getState() == PaymentState.SUCCESS) throw new CoreException(ErrorType.ORDER_ALREADY_PAID);
+            return found.getId();
+        }
 
         PaymentEntity payment = PaymentEntity.builder()
                 .userId(order.userId())
