@@ -46,6 +46,6 @@ public class CancelValidator {
 
         if (!order.getId().equals(targetItem.getOrderId())) throw new CoreException(ErrorType.NOT_FOUND_DATA);
 
-        if (targetItem.getCancelableQuantity() < action.quantity()) throw new CoreException(ErrorType.INVALID_REQUEST);
+        if (targetItem.cancellableQuantity() < action.quantity()) throw new CoreException(ErrorType.INVALID_REQUEST);
     }
 }

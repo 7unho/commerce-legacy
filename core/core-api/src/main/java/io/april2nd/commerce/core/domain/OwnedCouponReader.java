@@ -1,6 +1,8 @@
 package io.april2nd.commerce.core.domain;
 
 import io.april2nd.commerce.core.enums.EntityStatus;
+import io.april2nd.commerce.core.support.error.CoreException;
+import io.april2nd.commerce.core.support.error.ErrorType;
 import io.april2nd.commerce.storage.db.core.CouponEntity;
 import io.april2nd.commerce.storage.db.core.CouponRepository;
 import io.april2nd.commerce.storage.db.core.OwnedCouponEntity;
@@ -89,5 +91,29 @@ public class OwnedCouponReader {
                     );
                 })
                 .collect(Collectors.toList());
+    }
+
+    public OwnedCoupon getOwnedCoupon(Long ownedCouponId) {
+        OwnedCouponEntity ownedCoupon = ownedCouponRepository.findById(ownedCouponId)
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+
+        CouponEntity coupon = couponRepository.findById(ownedCoupon.getCouponId())
+                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
+
+        return new OwnedCoupon(
+                ownedCoupon.getId(),
+                ownedCoupon.getUserId(),
+                ownedCoupon.getState(),
+                ownedCoupon.getMaxUseCount(),
+                ownedCoupon.usedCount(),
+                new Coupon(
+                        coupon.getId(),
+                        coupon.getName(),
+                        coupon.getType(),
+                        coupon.getDiscount(),
+                        coupon.getMinOrderAmount(),
+                        coupon.getExpiredAt()
+                )
+        );
     }
 }

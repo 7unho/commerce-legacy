@@ -47,4 +47,8 @@ public class OrderEntity extends BaseEntity {
     public void canceled() {
         this.state = OrderState.CANCELED;
     }
+
+    public void partialCanceled() {
+        this.state = OrderState.PARTIAL_CANCELED;
+    }
 }

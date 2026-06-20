@@ -14,13 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
 public class CancelProcessor {
     private final OrderRepository orderRepository;
-    private final OrderManager orderManager;
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final OwnedCouponUsageManager ownedCouponUsageManager;
@@ -40,10 +40,7 @@ public class CancelProcessor {
         CancelBalanceEntity cancelBalance = cancelBalanceRepository.findByOrderId(order.getId())
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
-        cancelBalance.cancel(payment.getPaidAmount(), payment.getUsedPoint(), payment.getCouponDiscount());
-
         order.canceled();
-        orderManager.cancelAllOrderItems(order.getId());
 
         if (payment.hasAppliedCoupon()) {
             ownedCouponUsageManager.revert(payment.getOwnedCouponId());
@@ -53,17 +50,21 @@ public class CancelProcessor {
         pointHandler.earn(user, PointType.PAYMENT, payment.getId(), payment.getUsedPoint());
         pointHandler.deduct(user, PointType.PAYMENT, payment.getId(), PointAmount.PAYMENT);
 
+        cancelBalance.cancel(payment.getPaidAmount(), payment.getUsedPoint(), payment.getCouponDiscount());
+
         CancelEntity cancel = cancelRepository.save(
                 new CancelEntity(
                         CancelType.ALL,
                         payment.getUserId(),
                         payment.getOrderId(),
+                        -1L,
                         payment.getId(),
                         payment.getOriginAmount(),
                         payment.getOwnedCouponId(),
                         payment.getCouponDiscount(),
                         payment.getUsedPoint(),
                         payment.getPaidAmount(),
+                        -1L,
                         payment.getPaidAmount(),
                         payment.getUsedPoint(),
                         payment.getCouponDiscount(),
@@ -93,8 +94,8 @@ public class CancelProcessor {
     }
 
     @Transactional
-    public Long partialCancel(PartialCancelAction action, CancelCalculateResult calculateResult) {
-        OrderEntity order = orderRepository.findByOrderKeyAndStateAndStatus(action.orderKey(), OrderState.PAID, EntityStatus.ACTIVE)
+    public Long partialCancel(PartialCancelAction action, CancelCalculated calculated) {
+        OrderEntity order = orderRepository.findByOrderKeyAndStatus(action.orderKey(), EntityStatus.ACTIVE)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
         PaymentEntity payment = paymentRepository.findByOrderId(order.getId())
@@ -103,33 +104,54 @@ public class CancelProcessor {
         CancelBalanceEntity cancelBalance = cancelBalanceRepository.findByOrderId(order.getId())
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
-        OrderItemEntity orderItem = orderItemRepository.findById(action.orderItemId())
+        OrderItemEntity targetItem = orderItemRepository.findById(action.orderItemId())
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
-        if (!order.getId().equals(orderItem.getOrderId())) throw new CoreException(ErrorType.NOT_FOUND_DATA);
+        // 1. OrderItem 수량 및 상태 업데이트
+        targetItem.cancel(action.quantity());
 
-        orderManager.cancelOrderItem(order.getId(), action.orderItemId(), action.quantity());
+        // 2. Order 상태 업데이트
+        List<OrderItemEntity> orderItems = orderItemRepository.findByOrderId(order.getId());
+        if (orderItems.stream().allMatch(OrderItemEntity::isAllCanceled)) {
+            order.canceled();
+        } else {
+            order.partialCanceled();
+        }
 
-        cancelBalance.cancel(calculateResult.paidAmount(), calculateResult.pointAmount(), calculateResult.couponAmount());
-
-        if (calculateResult.shouldRestoreCoupon()) {
+        // 3. 쿠폰 복원
+        if (calculated.shouldRestoreCoupon()) {
             ownedCouponUsageManager.revert(payment.getOwnedCouponId());
         }
+
+        // 4. 포인트 환불
+        if (calculated.pointAmount().compareTo(BigDecimal.ZERO) > 0) {
+            pointHandler.earn(new User(payment.getUserId()), PointType.PAYMENT, payment.getId(), calculated.pointAmount());
+        }
+
+        // NOTE: 한 번이라도 취소가 생기면 결제 시 지급한 포인트 회수
+        if (cancelRepository.countByOrderId(order.getId()) == 0L) {
+            pointHandler.deduct(new User(payment.getUserId()), PointType.PAYMENT, payment.getId(), PointAmount.PAYMENT);
+        }
+
+        // 5. 잔액 업데이트
+        cancelBalance.cancel(calculated.paidAmount(), calculated.pointAmount(), calculated.couponAmount());
 
         CancelEntity cancel = cancelRepository.save(
                 new CancelEntity(
                         CancelType.PARTIAL,
                         payment.getUserId(),
                         payment.getOrderId(),
+                        action.orderItemId(),
                         payment.getId(),
-                        orderItem.getUnitPrice().multiply(BigDecimal.valueOf(action.quantity())),
+                        targetItem.getUnitPrice().multiply(BigDecimal.valueOf(action.quantity())),
                         payment.getOwnedCouponId(),
-                        calculateResult.couponAmount(),
-                        calculateResult.pointAmount(),
-                        calculateResult.paidAmount(),
-                        calculateResult.paidAmount(),
-                        calculateResult.pointAmount(),
-                        calculateResult.couponAmount(),
+                        calculated.couponAmount(),
+                        calculated.pointAmount(),
+                        calculated.paidAmount(),
+                        action.quantity(),
+                        calculated.paidAmount(),
+                        calculated.pointAmount(),
+                        calculated.couponAmount(),
                         "PG_API_응답_부분_취소_고유_값_저장",
                         LocalDateTime.now()
                 )
@@ -142,11 +164,11 @@ public class CancelProcessor {
                         payment.getOrderId(),
                         payment.getId(),
                         Objects.requireNonNull(payment.getExternalPaymentKey()),
-                        calculateResult.paidAmount(),
-                        calculateResult.pointAmount(),
-                        calculateResult.couponAmount(),
-                        calculateResult.pointAmount(),
-                        calculateResult.couponAmount(),
+                        calculated.paidAmount(),
+                        calculated.pointAmount(),
+                        calculated.couponAmount(),
+                        calculated.pointAmount(),
+                        calculated.couponAmount(),
                         "부분 취소 성공",
                         cancel.getCanceledAt()
                 )

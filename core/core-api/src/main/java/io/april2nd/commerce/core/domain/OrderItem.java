@@ -18,8 +18,4 @@ public record OrderItem(
         OrderState state,
         BigDecimal unitPrice,
         BigDecimal totalPrice
-) {
-    public Long cancelableQuantity() {
-        return quantity - canceledQuantity;
-    }
-}
+) {}

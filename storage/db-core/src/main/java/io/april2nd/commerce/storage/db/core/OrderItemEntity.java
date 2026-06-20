@@ -65,12 +65,16 @@ public class OrderItemEntity extends BaseEntity {
         this.state = OrderState.PAID;
     }
 
-    public Long getCancelableQuantity() {
+    public Long cancellableQuantity() {
         return quantity - canceledQuantity;
     }
 
     public void cancel(Long cancelQuantity) {
         this.canceledQuantity += cancelQuantity;
         this.state = this.canceledQuantity >= this.quantity ? OrderState.CANCELED : OrderState.PARTIAL_CANCELED;
+    }
+
+    public boolean isAllCanceled() {
+        return quantity == canceledQuantity;
     }
 }

@@ -22,12 +22,12 @@ import java.math.BigDecimal;
 public class CancelBalanceEntity extends BaseEntity {
     private Long orderId;
     private Long paymentId;
-    private BigDecimal cancelablePaidAmount;
-    private BigDecimal cancelablePointAmount;
-    private BigDecimal cancelableCouponAmount;
-    private BigDecimal canceledPaidAmount;
-    private BigDecimal canceledPointAmount;
-    private BigDecimal canceledCouponAmount;
+    private BigDecimal cancellablePaidAmount;
+    private BigDecimal cancellablePointAmount;
+    private BigDecimal cancellableCouponAmount;
+    private BigDecimal cancelledPaidAmount;
+    private BigDecimal cancelledPointAmount;
+    private BigDecimal cancelledCouponAmount;
 
     @Version
     private Long version = 0L;
@@ -35,26 +35,32 @@ public class CancelBalanceEntity extends BaseEntity {
     public CancelBalanceEntity(
             Long orderId,
             Long paymentId,
-            BigDecimal cancelablePaidAmount,
-            BigDecimal cancelablePointAmount,
-            BigDecimal cancelableCouponAmount
+            BigDecimal cancellablePaidAmount,
+            BigDecimal cancellablePointAmount,
+            BigDecimal cancellableCouponAmount
     ) {
         this.orderId = orderId;
         this.paymentId = paymentId;
-        this.cancelablePaidAmount = cancelablePaidAmount;
-        this.cancelablePointAmount = cancelablePointAmount;
-        this.cancelableCouponAmount = cancelableCouponAmount;
-        this.canceledPaidAmount = BigDecimal.ZERO;
-        this.canceledPointAmount = BigDecimal.ZERO;
-        this.canceledCouponAmount = BigDecimal.ZERO;
+        this.cancellablePaidAmount = cancellablePaidAmount;
+        this.cancellablePointAmount = cancellablePointAmount;
+        this.cancellableCouponAmount = cancellableCouponAmount;
+        this.cancelledPaidAmount = BigDecimal.ZERO;
+        this.cancelledPointAmount = BigDecimal.ZERO;
+        this.cancelledCouponAmount = BigDecimal.ZERO;
     }
 
     public void cancel(BigDecimal paidAmount, BigDecimal pointAmount, BigDecimal couponAmount) {
-        this.cancelablePaidAmount = cancelablePaidAmount.subtract(paidAmount);
-        this.cancelablePointAmount = cancelablePointAmount.subtract(pointAmount);
-        this.cancelableCouponAmount = cancelableCouponAmount.subtract(couponAmount);
-        this.canceledPaidAmount = canceledPaidAmount.add(paidAmount);
-        this.canceledPointAmount = canceledPointAmount.add(pointAmount);
-        this.canceledCouponAmount = canceledCouponAmount.add(couponAmount);
+        this.cancellablePaidAmount = cancellablePaidAmount.subtract(paidAmount);
+        this.cancellablePointAmount = cancellablePointAmount.subtract(pointAmount);
+        this.cancellableCouponAmount = cancellableCouponAmount.subtract(couponAmount);
+        this.cancelledPaidAmount = cancelledPaidAmount.add(paidAmount);
+        this.cancelledPointAmount = cancelledPointAmount.add(pointAmount);
+        this.cancelledCouponAmount = cancelledCouponAmount.add(couponAmount);
+    }
+
+    public BigDecimal totalCanceledAmount() {
+        return cancelledPaidAmount
+                .add(cancelledPointAmount)
+                .add(cancelledCouponAmount);
     }
 }

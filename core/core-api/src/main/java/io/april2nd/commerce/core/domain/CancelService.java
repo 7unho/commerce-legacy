@@ -22,15 +22,11 @@ public class CancelService {
     public Long partialCancel(User user, PartialCancelAction action) {
         cancelValidator.validatePartial(user, action);
 
-        CancelCalculateResult calculateResult = cancelCalculator.calculatePartial(
-                action.orderKey(),
-                action.orderItemId(),
-                action.quantity()
-        );
+        CancelCalculated calculated = cancelCalculator.calculatePartial(action);
 
         /**
          * NOTE: PG 부분 취소 API 호출 => 성공 시 다음 로직으로 진행 | 실패 시 예외 발생
          */
-        return cancelProcessor.partialCancel(action, calculateResult);
+        return cancelProcessor.partialCancel(action, calculated);
     }
 }

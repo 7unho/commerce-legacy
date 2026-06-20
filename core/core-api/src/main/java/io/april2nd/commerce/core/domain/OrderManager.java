@@ -79,32 +79,6 @@ public class OrderManager {
         return saved.getOrderKey();
     }
 
-    @Transactional
-    public void cancelOrderItem(Long orderId, Long orderItemId, Long quantity) {
-        OrderItemEntity orderItem = orderItemRepository.findById(orderItemId)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
-        if (!orderId.equals(orderItem.getOrderId())) throw new CoreException(ErrorType.NOT_FOUND_DATA);
-        if (quantity > orderItem.getCancelableQuantity()) throw new CoreException(ErrorType.INVALID_REQUEST);
-
-        orderItem.cancel(quantity);
-    }
-
-    @Transactional
-    public void payAllOrderItems(Long orderId) {
-        List<OrderItemEntity> orderItems = orderItemRepository.findByOrderId(orderId);
-        if (orderItems.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
-
-        orderItems.forEach(OrderItemEntity::paid);
-    }
-
-    @Transactional
-    public void cancelAllOrderItems(Long orderId) {
-        List<OrderItemEntity> orderItems = orderItemRepository.findByOrderId(orderId);
-        if (orderItems.isEmpty()) throw new CoreException(ErrorType.NOT_FOUND_DATA);
-
-        orderItems.forEach(it -> it.cancel(it.getCancelableQuantity()));
-    }
-
     private BigDecimal calculateTotalPrice(List<NewOrderItem> items, Map<Long, ProductOption> productOptionMap) {
         return items.stream()
                 .map(item -> {
