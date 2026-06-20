@@ -4,6 +4,7 @@ import io.april2nd.commerce.core.enums.CouponType;
 import io.april2nd.commerce.core.enums.EntityStatus;
 import io.april2nd.commerce.core.enums.OrderState;
 import io.april2nd.commerce.core.enums.PaymentState;
+import io.april2nd.commerce.core.enums.OwnedCouponState;
 import io.april2nd.commerce.storage.db.core.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,8 +28,7 @@ class CancelCalculatorTest {
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final CancelBalanceRepository cancelBalanceRepository;
-    private final OwnedCouponRepository ownedCouponRepository;
-    private final CouponRepository couponRepository;
+    private final OwnedCouponReader ownedCouponReader;
     private final CancelCalculator cancelCalculator;
 
     CancelCalculatorTest(
@@ -36,22 +36,19 @@ class CancelCalculatorTest {
             @Mock OrderItemRepository orderItemRepository,
             @Mock PaymentRepository paymentRepository,
             @Mock CancelBalanceRepository cancelBalanceRepository,
-            @Mock OwnedCouponRepository ownedCouponRepository,
-            @Mock CouponRepository couponRepository
+            @Mock OwnedCouponReader ownedCouponReader
     ) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.paymentRepository = paymentRepository;
         this.cancelBalanceRepository = cancelBalanceRepository;
-        this.ownedCouponRepository = ownedCouponRepository;
-        this.couponRepository = couponRepository;
+        this.ownedCouponReader = ownedCouponReader;
         this.cancelCalculator = new CancelCalculator(
                 orderRepository,
                 orderItemRepository,
                 paymentRepository,
                 cancelBalanceRepository,
-                ownedCouponRepository,
-                couponRepository
+                ownedCouponReader
         );
     }
 
@@ -67,17 +64,17 @@ class CancelCalculatorTest {
                 3
         );
 
-        CancelCalculateResult first = calculateAndRecord(scenario, 1L);
+        CancelCalculated first = calculateAndRecord(scenario, 1L);
         assertThat(first.paidAmount()).isEqualByComparingTo("10000");
         assertThat(first.pointAmount()).isEqualByComparingTo("0");
         assertThat(first.shouldRestoreCoupon()).isFalse();
 
-        CancelCalculateResult second = calculateAndRecord(scenario, 2L);
+        CancelCalculated second = calculateAndRecord(scenario, 2L);
         assertThat(second.paidAmount()).isEqualByComparingTo("5000");
         assertThat(second.pointAmount()).isEqualByComparingTo("5000");
         assertThat(second.shouldRestoreCoupon()).isFalse();
 
-        CancelCalculateResult third = calculateAndRecord(scenario, 3L);
+        CancelCalculated third = calculateAndRecord(scenario, 3L);
         assertThat(third.paidAmount()).isEqualByComparingTo("0");
         assertThat(third.pointAmount()).isEqualByComparingTo("10000");
         assertThat(third.shouldRestoreCoupon()).isFalse();
@@ -95,25 +92,25 @@ class CancelCalculatorTest {
                 5
         );
 
-        CancelCalculateResult first = calculateAndRecord(scenario, 1L);
+        CancelCalculated first = calculateAndRecord(scenario, 1L);
         assertThat(first.paidAmount()).isEqualByComparingTo("10000");
         assertThat(first.couponAmount()).isEqualByComparingTo("0");
         assertThat(first.shouldRestoreCoupon()).isFalse();
 
-        CancelCalculateResult second = calculateAndRecord(scenario, 2L);
+        CancelCalculated second = calculateAndRecord(scenario, 2L);
         assertThat(second.paidAmount()).isEqualByComparingTo("0");
         assertThat(second.couponAmount()).isEqualByComparingTo("10000");
         assertThat(second.shouldRestoreCoupon()).isTrue();
 
-        CancelCalculateResult third = calculateAndRecord(scenario, 3L);
+        CancelCalculated third = calculateAndRecord(scenario, 3L);
         assertThat(third.paidAmount()).isEqualByComparingTo("10000");
         assertThat(third.couponAmount()).isEqualByComparingTo("0");
         assertThat(third.shouldRestoreCoupon()).isFalse();
 
-        CancelCalculateResult fourth = calculateAndRecord(scenario, 4L);
+        CancelCalculated fourth = calculateAndRecord(scenario, 4L);
         assertThat(fourth.paidAmount()).isEqualByComparingTo("10000");
 
-        CancelCalculateResult fifth = calculateAndRecord(scenario, 5L);
+        CancelCalculated fifth = calculateAndRecord(scenario, 5L);
         assertThat(fifth.paidAmount()).isEqualByComparingTo("10000");
     }
 
@@ -129,34 +126,34 @@ class CancelCalculatorTest {
                 6
         );
 
-        CancelCalculateResult first = calculateAndRecord(scenario, 1L);
+        CancelCalculated first = calculateAndRecord(scenario, 1L);
         assertThat(first.paidAmount()).isEqualByComparingTo("10000");
         assertThat(first.couponAmount()).isEqualByComparingTo("0");
         assertThat(first.pointAmount()).isEqualByComparingTo("0");
 
-        CancelCalculateResult second = calculateAndRecord(scenario, 2L);
+        CancelCalculated second = calculateAndRecord(scenario, 2L);
         assertThat(second.paidAmount()).isEqualByComparingTo("10000");
         assertThat(second.couponAmount()).isEqualByComparingTo("0");
         assertThat(second.pointAmount()).isEqualByComparingTo("0");
 
-        CancelCalculateResult third = calculateAndRecord(scenario, 3L);
+        CancelCalculated third = calculateAndRecord(scenario, 3L);
         assertThat(third.paidAmount()).isEqualByComparingTo("0");
         assertThat(third.couponAmount()).isEqualByComparingTo("10000");
         assertThat(third.pointAmount()).isEqualByComparingTo("0");
         assertThat(third.shouldRestoreCoupon()).isTrue();
 
-        CancelCalculateResult fourth = calculateAndRecord(scenario, 4L);
+        CancelCalculated fourth = calculateAndRecord(scenario, 4L);
         assertThat(fourth.paidAmount()).isEqualByComparingTo("5000");
         assertThat(fourth.couponAmount()).isEqualByComparingTo("5000");
         assertThat(fourth.pointAmount()).isEqualByComparingTo("0");
-        assertThat(fourth.shouldRestoreCoupon()).isTrue();
+        assertThat(fourth.shouldRestoreCoupon()).isFalse();
 
-        CancelCalculateResult fifth = calculateAndRecord(scenario, 5L);
+        CancelCalculated fifth = calculateAndRecord(scenario, 5L);
         assertThat(fifth.paidAmount()).isEqualByComparingTo("5000");
         assertThat(fifth.couponAmount()).isEqualByComparingTo("0");
         assertThat(fifth.pointAmount()).isEqualByComparingTo("5000");
 
-        CancelCalculateResult sixth = calculateAndRecord(scenario, 6L);
+        CancelCalculated sixth = calculateAndRecord(scenario, 6L);
         assertThat(sixth.paidAmount()).isEqualByComparingTo("0");
         assertThat(sixth.couponAmount()).isEqualByComparingTo("0");
         assertThat(sixth.pointAmount()).isEqualByComparingTo("10000");
@@ -198,7 +195,7 @@ class CancelCalculatorTest {
         );
         Map<Long, OrderItemEntity> orderItemMap = createOrderItems(orderId, itemCount);
 
-        given(orderRepository.findByOrderKeyAndStateAndStatus("order-key", OrderState.PAID, EntityStatus.ACTIVE))
+        given(orderRepository.findByOrderKeyAndStatus("order-key", EntityStatus.ACTIVE))
                 .willReturn(Optional.of(order));
         given(paymentRepository.findByOrderId(orderId)).willReturn(Optional.of(payment));
         given(cancelBalanceRepository.findByOrderId(orderId)).willReturn(Optional.of(balance));
@@ -206,30 +203,25 @@ class CancelCalculatorTest {
                 .willAnswer(invocation -> Optional.ofNullable(orderItemMap.get(invocation.getArgument(0))));
 
         if (ownedCouponId != null) {
-            OwnedCouponEntity ownedCoupon = entityWithId(
-                    OwnedCouponEntity.builder()
-                            .userId(1L)
-                            .couponId(40L)
-                            .maxUseCount(1L)
-                            .usedCount(1L)
-                            .build(),
-                    ownedCouponId
+            OwnedCoupon ownedCoupon = new OwnedCoupon(
+                    ownedCouponId,
+                    1L,
+                    OwnedCouponState.USED,
+                    1L,
+                    1L,
+                    new Coupon(40L, "쿠폰", CouponType.FIXED_AMOUNT, couponDiscount, couponMinimumOrderAmount, LocalDateTime.MAX)
             );
-            CouponEntity coupon = entityWithId(
-                    new CouponEntity("쿠폰", CouponType.FIXED_AMOUNT, couponDiscount, 1L, couponMinimumOrderAmount, LocalDateTime.MAX),
-                    40L
-            );
-            given(ownedCouponRepository.findById(ownedCouponId)).willReturn(Optional.of(ownedCoupon));
-            given(couponRepository.findById(40L)).willReturn(Optional.of(coupon));
+            given(ownedCouponReader.getOwnedCoupon(ownedCouponId)).willReturn(ownedCoupon);
         }
 
         printScenarioHeader(name, orderAmount, paidAmount, couponDiscount, usedPoint, couponMinimumOrderAmount);
         return new Scenario(name, balance);
     }
 
-    private CancelCalculateResult calculateAndRecord(Scenario scenario, Long orderItemId) {
-        CancelCalculateResult result = cancelCalculator.calculatePartial("order-key", orderItemId, 1L);
-        scenario.balance().apply(result.paidAmount(), result.pointAmount(), result.couponAmount());
+    private CancelCalculated calculateAndRecord(Scenario scenario, Long orderItemId) {
+        PartialCancelAction action = new PartialCancelAction("order-key", orderItemId, 1L);
+        CancelCalculated result = cancelCalculator.calculatePartial(action);
+        scenario.balance().cancel(result.paidAmount(), result.pointAmount(), result.couponAmount());
         printCancelResult(scenario, orderItemId, result);
         return result;
     }
@@ -253,7 +245,7 @@ class CancelCalculatorTest {
         );
     }
 
-    private void printCancelResult(Scenario scenario, Long orderItemId, CancelCalculateResult result) {
+    private void printCancelResult(Scenario scenario, Long orderItemId, CancelCalculated result) {
         CancelBalanceEntity balance = scenario.balance();
         System.out.printf(
                 "OrderItem-%d Cancel -> paid=%s, coupon=%s, point=%s, restoreCoupon=%s | remainPaid=%s, remainCoupon=%s, remainPoint=%s | canceledPaid=%s, canceledCoupon=%s, canceledPoint=%s%n",
@@ -262,12 +254,12 @@ class CancelCalculatorTest {
                 result.couponAmount(),
                 result.pointAmount(),
                 result.shouldRestoreCoupon(),
-                balance.getCancelablePaidAmount(),
-                balance.getCancelableCouponAmount(),
-                balance.getCancelablePointAmount(),
-                balance.getCanceledPaidAmount(),
-                balance.getCanceledCouponAmount(),
-                balance.getCanceledPointAmount()
+                balance.getCancellablePaidAmount(),
+                balance.getCancellableCouponAmount(),
+                balance.getCancellablePointAmount(),
+                balance.getCancelledPaidAmount(),
+                balance.getCancelledCouponAmount(),
+                balance.getCancelledPointAmount()
         );
     }
 
