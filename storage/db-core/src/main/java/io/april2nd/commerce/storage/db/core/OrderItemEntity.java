@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 @Table(name = "order_item")
@@ -75,6 +76,6 @@ public class OrderItemEntity extends BaseEntity {
     }
 
     public boolean isAllCanceled() {
-        return quantity == canceledQuantity;
+        return Objects.equals(quantity, canceledQuantity);
     }
 }

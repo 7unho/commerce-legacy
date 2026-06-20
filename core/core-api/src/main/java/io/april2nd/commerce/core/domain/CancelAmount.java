@@ -33,7 +33,8 @@ public record CancelAmount(
     }
 
     public boolean isRestoreCoupon() {
-        return (remainOrderAmount().compareTo(minOrderAmount) > 0) && isBrokenCoupon();
+        return remainOrderAmount().compareTo(minOrderAmount) >= 0
+                && isBrokenCoupon();
     }
 
     private boolean isBrokenCoupon() {

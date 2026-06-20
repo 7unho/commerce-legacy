@@ -105,6 +105,7 @@ public class CancelProcessor {
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
         OrderItemEntity targetItem = orderItemRepository.findById(action.orderItemId())
+                .filter(item -> order.getId().equals(item.getOrderId()))
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND_DATA));
 
         // 1. OrderItem 수량 및 상태 업데이트
