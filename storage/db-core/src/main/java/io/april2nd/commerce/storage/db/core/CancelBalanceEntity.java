@@ -49,7 +49,7 @@ public class CancelBalanceEntity extends BaseEntity {
         this.canceledCouponAmount = BigDecimal.ZERO;
     }
 
-    public void apply(BigDecimal paidAmount, BigDecimal pointAmount, BigDecimal couponAmount) {
+    public void cancel(BigDecimal paidAmount, BigDecimal pointAmount, BigDecimal couponAmount) {
         this.cancelablePaidAmount = cancelablePaidAmount.subtract(paidAmount);
         this.cancelablePointAmount = cancelablePointAmount.subtract(pointAmount);
         this.cancelableCouponAmount = cancelableCouponAmount.subtract(couponAmount);
