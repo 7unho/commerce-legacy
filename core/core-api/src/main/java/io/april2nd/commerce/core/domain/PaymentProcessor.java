@@ -17,8 +17,10 @@ import java.util.Objects;
 public class PaymentProcessor {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final PointHandler pointHandler;
     private final OwnedCouponUsageManager ownedCouponUsageManager;
+    private final CancelBalanceRepository cancelBalanceRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
 
     @Transactional
@@ -34,7 +36,11 @@ public class PaymentProcessor {
                 PaymentMethod.CARD,
                 "PG 승인 API 호출의 응답 값 중 `승인번호` 넣기"
         );
+
         order.paid();
+        orderItemRepository.findByOrderId(order.getId())
+                .stream()
+                .forEach(OrderItemEntity::paid);
 
         if (payment.hasAppliedCoupon()) {
             ownedCouponUsageManager.use(payment.getOwnedCouponId());
@@ -42,6 +48,16 @@ public class PaymentProcessor {
 
         pointHandler.deduct(new User(payment.getUserId()), PointType.PAYMENT, payment.getId(), payment.getUsedPoint());
         pointHandler.earn(new User(payment.getUserId()), PointType.PAYMENT, payment.getId(), PointAmount.PAYMENT);
+
+        cancelBalanceRepository.save(
+                new CancelBalanceEntity(
+                        payment.getOrderId(),
+                        payment.getId(),
+                        payment.getPaidAmount(),
+                        payment.getUsedPoint(),
+                        payment.getCouponDiscount()
+                )
+        );
 
         transactionHistoryRepository.save(
                 new TransactionHistoryEntity(

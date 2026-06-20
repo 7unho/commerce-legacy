@@ -47,6 +47,8 @@ public class OrderReader {
                                 it.getShortDescription(),
                                 it.getProductOptionDescription(),
                                 it.getQuantity(),
+                                it.getCanceledQuantity(),
+                                it.getState(),
                                 it.getUnitPrice(),
                                 it.getTotalPrice()
                         ))
