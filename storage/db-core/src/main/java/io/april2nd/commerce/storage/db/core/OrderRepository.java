@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
+    Optional<OrderEntity> findByOrderKeyAndStatus(String orderKey, EntityStatus status);
+
     Optional<OrderEntity> findByOrderKeyAndStateAndStatus(String orderKey, OrderState state, EntityStatus status);
 
     List<OrderEntity> findByUserIdAndStateAndStatusOrderByIdDesc(Long userId, OrderState state, EntityStatus status);
