@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @RestController
 @RequiredArgsConstructor
 public class SettlementBatchController {
-    private SettlementService settlementService;
+    private final SettlementService settlementService;
 
     /**
      * NOTE: 정산 대상 적재 배치
