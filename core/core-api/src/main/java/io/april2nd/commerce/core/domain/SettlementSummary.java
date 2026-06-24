@@ -6,6 +6,7 @@ import java.time.LocalDate;
 public record SettlementSummary(
         Long merchantId,
         LocalDate settlementDate,
-        BigDecimal targetAmount
+        BigDecimal targetAmount,
+        BigDecimal recentSalesAmount
 ) {
 }

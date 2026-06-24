@@ -18,7 +18,7 @@ public class SettlementManager {
     public int create(List<SettlementSummary> summaries) {
         List<SettlementEntity> settlements = summaries.stream()
                 .map(summary -> {
-                    SettlementAmount amount = SettlementCalculator.calculate(summary.targetAmount());
+                    SettlementAmount amount = SettlementCalculator.calculate(summary.targetAmount(), summary.recentSalesAmount());
 
                     return new SettlementEntity(
                             summary.merchantId(),
