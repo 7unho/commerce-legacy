@@ -3,10 +3,11 @@ package io.april2nd.commerce.core.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record SettlementSummary(
+public record SettlementTarget(
         Long merchantId,
-        LocalDate settlementDate,
         BigDecimal targetAmount,
-        BigDecimal recentSalesAmount
+        LocalDate settlementDate,
+        Long targetCount,
+        Long orderCount
 ) {
 }

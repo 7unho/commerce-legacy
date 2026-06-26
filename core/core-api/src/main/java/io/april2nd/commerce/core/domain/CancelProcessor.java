@@ -160,7 +160,7 @@ public class CancelProcessor {
 
         transactionHistoryRepository.save(
                 new TransactionHistoryEntity(
-                        TransactionType.PARTIAL_CANCELED,
+                        TransactionType.PARTIAL_CANCEL,
                         payment.getUserId(),
                         payment.getOrderId(),
                         payment.getId(),

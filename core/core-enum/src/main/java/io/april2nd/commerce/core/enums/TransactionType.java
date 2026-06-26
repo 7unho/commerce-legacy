@@ -4,5 +4,5 @@ public enum TransactionType {
     PAYMENT,
     PAYMENT_FAIL,
     CANCEL,
-    PARTIAL_CANCELED,
+    PARTIAL_CANCEL,
 }

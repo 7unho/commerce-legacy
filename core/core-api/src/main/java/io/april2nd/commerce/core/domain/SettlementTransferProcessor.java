@@ -1,15 +1,12 @@
 package io.april2nd.commerce.core.domain;
 
-import io.april2nd.commerce.core.enums.SettlementState;
-import io.april2nd.commerce.storage.db.core.SettlementEntity;
-import io.april2nd.commerce.storage.db.core.SettlementRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -18,56 +15,73 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SettlementTransferProcessor {
+    private final SettlementTransferHandler settlementTransferHandler;
+
     private static final Logger log = LoggerFactory.getLogger(SettlementTransferProcessor.class);
 
-    private final SettlementRepository settlementRepository;
 
-    @Transactional
-    public int transfer() {
-        List<SettlementEntity> readySettlements = settlementRepository.findByState(SettlementState.READY);
-        Map<Long, SettlementEntity> settlementsById = readySettlements.stream()
-                .collect(Collectors.toMap(SettlementEntity::getId, Function.identity()));
-        Map<Long, List<SettlementTransferTarget>> targetsByMerchant = readySettlements.stream()
-                .map(settlement -> new SettlementTransferTarget(
-                        settlement.getId(),
-                        settlement.getMerchantId(),
-                        settlement.getSettlementAmount()
-                ))
-                .collect(Collectors.groupingBy(SettlementTransferTarget::merchantId));
+    public void transfer(
+            LocalDate targetDate,
+            List<Merchant> merchants,
+            List<Settlement> settlements
+    ) {
+        Map<Long, Merchant> merchantMap = merchants.stream()
+                .collect(Collectors.toMap(
+                        Merchant::id,
+                        Function.identity()
+                ));
 
-        for (Map.Entry<Long, List<SettlementTransferTarget>> entry : targetsByMerchant.entrySet()) {
-            Long merchantId = entry.getKey();
-            List<SettlementTransferTarget> targets = entry.getValue();
+        Map<Long, List<Settlement>> settlementMap = settlements.stream()
+                .collect(Collectors.groupingBy(Settlement::merchantId));
+
+        for (Map.Entry<Long, List<Settlement>> settlementGroup : settlementMap.entrySet()) {
+            Long merchantId = settlementGroup.getKey();
+            List<Settlement> merchantSettlements = settlementGroup.getValue();
 
             try {
-                BigDecimal transferAmount = calculateTransferAmount(targets);
+                Merchant merchant = merchantMap.get(merchantId);
 
-                if (transferAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                    log.warn("[SETTLEMENT_TRANSFER] {} 가맹점 미정산 금액 : {} 발생 확인 요망!",
-                            merchantId, transferAmount);
+                if (merchant == null) {
+                    log.warn("[SettlementTransferProcessor.transfer] {} 가맹점 정보를 찾을 수 없습니다.", merchantId);
                     continue;
                 }
 
-                // TODO: 외부 이체 API 호출
+                if (targetDate.getDayOfMonth() % merchant.settlementCycle() != 0) {
+                    log.info(
+                            "[SettlementTransferProcessor.transfer] {} 가맹점은 정산 주기가 아닙니다. (cycle: {}, dayOfMonth: {})",
+                            merchantId,
+                            merchant.settlementCycle(),
+                            targetDate.getDayOfMonth()
+                    );
+                    continue;
+                }
 
-                targets.stream()
-                        .map(SettlementTransferTarget::settlementId)
-                        .map(settlementsById::get)
-                        .forEach(SettlementEntity::sent);
+                BigDecimal transferAmount = merchantSettlements.stream()
+                        .map(Settlement::settlementAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+                if (transferAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                    log.warn(
+                            "[SettlementTransferProcessor.transfer] {} 가맹점 미정산 금액 : {} 발생 확인 요망!",
+                            merchantId,
+                            transferAmount
+                    );
+                    continue;
+                }
+
+                /*
+                 * NOTE: 외부 펌 등 이체 서비스 API 호출
+                 */
+
+                settlementTransferHandler.success(merchantSettlements);
             } catch (Exception e) {
-                log.error("[SETTLEMENT_TRANSFER] {} 가맹점 정산 중 에러 발생: {}",
-                        merchantId, e.getMessage(), e);
+                log.error(
+                        "[SettlementTransferProcessor.transfer] {} 가맹점 정산 중 에러 발생: {}",
+                        merchantId,
+                        e.getMessage(),
+                        e
+                );
             }
         }
-
-        settlementRepository.saveAll(readySettlements);
-        return targetsByMerchant.size();
-    }
-
-    private BigDecimal calculateTransferAmount(List<SettlementTransferTarget> targets) {
-        return targets.stream()
-                .map(SettlementTransferTarget::settlementAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

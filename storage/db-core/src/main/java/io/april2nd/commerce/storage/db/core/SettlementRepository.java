@@ -13,22 +13,14 @@ public interface SettlementRepository extends JpaRepository<SettlementEntity, Lo
 
     @Query(
             """
-            SELECT new io.april2nd.commerce.storage.db.core.SettlementRecentAmount(
-                settlement.merchantId,
-                SUM(settlement.originalAmount)
-            )
-            FROM SettlementEntity settlement
-            WHERE settlement.settlementDate >= :from
-                AND settlement.settlementDate < :to
-                AND settlement.merchantId IN :merchantIds
-                AND settlement.state = :state
-            GROUP BY settlement.merchantId
+            SELECT s.merchantId as merchantId, SUM(s.originalAmount) as amount
+            FROM SettlementEntity s
+            WHERE s.merchantId in :merchantIds
+              AND s.settlementDate >= :startDate
+              AND s.settlementDate <= :endDate
+              AND s.state = :state
+            GROUP BY s.merchantId
             """
     )
-    List<SettlementRecentAmount> findRecentAmounts(
-            Collection<Long> merchantIds,
-            LocalDate from,
-            LocalDate to,
-            SettlementState state
-    );
+    List<MerchantAmountProjection> sumOriginalAmountByMerchantIdInAndSettlementDateBetweenAndState(Collection<Long> merchantIds, LocalDate startDate, LocalDate endDate, SettlementState state);
 }

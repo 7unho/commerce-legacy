@@ -43,9 +43,7 @@ public class SettlementBatchController {
             @RequestParam(required = false) LocalDate targetDate
     ) {
         LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
-
-        settlementService.calculate(date);
-
+        settlementService.generate(date);
         return ApiResponse.success();
     }
 
@@ -54,8 +52,11 @@ public class SettlementBatchController {
      * - 오전 9시 실행
      */
     @PostMapping("/internal-batch/transfer")
-    public ApiResponse<Void> transfer() {
-        settlementService.transfer();
+    public ApiResponse<Void> transfer(
+            @RequestParam(required = false) LocalDate targetDate
+    ) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        settlementService.transfer(date);
         return ApiResponse.success();
     }
 }
