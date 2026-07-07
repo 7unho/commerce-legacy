@@ -80,7 +80,8 @@ public class SettlementTargetManager {
         Map<Long, Long> transactionIdMap = cancels.stream()
                 .collect(Collectors.toMap(
                         SettlementCancel::orderId,
-                        SettlementCancel::id
+                        SettlementCancel::id,
+                        (existing, ignored) -> existing
                 ));
 
         List<OrderItemEntity> orderItems = orderItemRepository.findByOrderIdIn(transactionIdMap.keySet());

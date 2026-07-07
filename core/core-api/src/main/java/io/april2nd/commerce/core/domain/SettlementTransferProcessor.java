@@ -46,11 +46,21 @@ public class SettlementTransferProcessor {
                     continue;
                 }
 
-                if (targetDate.getDayOfMonth() % merchant.settlementCycle() != 0) {
+                Long settlementCycle = merchant.settlementCycle();
+                if (settlementCycle == null || settlementCycle <= 0) {
+                    log.warn(
+                            "[SettlementTransferProcessor.transfer] {} 가맹점 정산 주기 설정이 올바르지 않습니다. (cycle: {})",
+                            merchantId,
+                            settlementCycle
+                    );
+                    continue;
+                }
+
+                if (targetDate.getDayOfMonth() % settlementCycle != 0) {
                     log.info(
                             "[SettlementTransferProcessor.transfer] {} 가맹점은 정산 주기가 아닙니다. (cycle: {}, dayOfMonth: {})",
                             merchantId,
-                            merchant.settlementCycle(),
+                            settlementCycle,
                             targetDate.getDayOfMonth()
                     );
                     continue;

@@ -3,6 +3,7 @@ package io.april2nd.commerce.storage.db.core;
 import io.april2nd.commerce.core.enums.SettlementState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -22,5 +23,10 @@ public interface SettlementRepository extends JpaRepository<SettlementEntity, Lo
             GROUP BY s.merchantId
             """
     )
-    List<MerchantAmountProjection> sumOriginalAmountByMerchantIdInAndSettlementDateBetweenAndState(Collection<Long> merchantIds, LocalDate startDate, LocalDate endDate, SettlementState state);
+    List<MerchantAmountProjection> sumOriginalAmountByMerchantIdInAndSettlementDateBetweenAndState(
+            @Param("merchantIds") Collection<Long> merchantIds,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("state") SettlementState state);
+
 }

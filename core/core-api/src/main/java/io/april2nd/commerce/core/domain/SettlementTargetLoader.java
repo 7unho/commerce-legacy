@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class SettlementTargetLoader {
+    private static final int PAGE_SIZE = 1000;
+    private static final String SORT_PROPERTY_ID = "id";
+
     private final SettlementSourceReader settlementSourceReader;
     private final SettlementTargetManager settlementTargetProcessor;
 
@@ -27,7 +30,7 @@ public class SettlementTargetLoader {
     }
 
     private void processPayment(LocalDate targetDate, LocalDateTime from, LocalDateTime to) {
-        Pageable paymentPageable = PageRequest.of(0, 1000, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable paymentPageable = PageRequest.of(0, PAGE_SIZE, Sort.by(Sort.Direction.ASC, SORT_PROPERTY_ID));
         Slice<SettlementPayment> payments;
         do {
             payments = settlementSourceReader.readPaymentsByStateAndPaidAtBetween(
@@ -40,13 +43,14 @@ public class SettlementTargetLoader {
                 settlementTargetProcessor.processPayments(targetDate, payments.getContent());
             } catch (Exception e) {
                 log.error("[SettlementTargetLoader.processPayment] `결제` 거래건 정산 대상 생성 중 오류 발생 offset: {}, size: {}, page: {}, error: {}", paymentPageable.getOffset(), paymentPageable.getPageSize(), paymentPageable.getPageNumber(), e.getMessage(), e);
+                throw new IllegalStateException("[SettlementTargetLoader.processPayment] 결제 거래건 정산 대상 생성 실패", e);
             }
             paymentPageable = payments.nextPageable();
         } while (payments.hasNext());
     }
 
     private void processCancel(LocalDate targetDate, LocalDateTime from, LocalDateTime to) {
-        Pageable cancelPageable = PageRequest.of(0, 1000, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable cancelPageable = PageRequest.of(0, PAGE_SIZE, Sort.by(Sort.Direction.ASC, SORT_PROPERTY_ID));
         Slice<SettlementCancel> cancels;
 
         do {
@@ -55,6 +59,7 @@ public class SettlementTargetLoader {
                 settlementTargetProcessor.processCancels(targetDate, cancels.getContent());
             } catch (Exception e) {
                 log.error("[SETTLEMENT_LOAD_TARGETS] `취소` 거래건 정산 대상 생성 중 오류 발생 offset: {} size: {} page: {} error: {}", cancelPageable.getOffset(), cancelPageable.getPageSize(), cancelPageable.getPageNumber(), e.getMessage(), e);
+                throw new IllegalStateException("[SettlementTargetLoader.processCancel] 취소 거래건 정산 대상 생성 실패", e);
             }
             cancelPageable = cancels.nextPageable();
         } while (cancels.hasNext());

@@ -24,8 +24,8 @@ public class SettlementReader {
             return Collections.emptyMap();
         }
 
-        LocalDate startDate = settlementDate.minusMonths(1);
-        LocalDate endDate = settlementDate.minusDays(1);
+        LocalDate startDate = SettlementRecentSalesPolicy.RANGE.startDate(settlementDate);
+        LocalDate endDate = SettlementRecentSalesPolicy.RANGE.endDate(settlementDate);
 
         return settlementRepository.sumOriginalAmountByMerchantIdInAndSettlementDateBetweenAndState(
                         merchantIds,
