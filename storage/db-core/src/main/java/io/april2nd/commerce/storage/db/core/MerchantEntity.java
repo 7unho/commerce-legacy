@@ -14,4 +14,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MerchantEntity extends BaseEntity {
     private String name;
+    private Long settlementCycle;
 }

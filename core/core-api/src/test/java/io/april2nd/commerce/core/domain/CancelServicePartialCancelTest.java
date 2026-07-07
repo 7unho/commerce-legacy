@@ -310,7 +310,7 @@ class CancelServicePartialCancelTest {
             ExpectedCancel expected = expectedHistories.get(index);
             TransactionHistoryEntity actual = histories.get(index);
 
-            assertThat(actual.getType()).isEqualTo(TransactionType.PARTIAL_CANCELED);
+            assertThat(actual.getType()).isEqualTo(TransactionType.PARTIAL_CANCEL);
             assertThat(actual.getPaidAmount()).isEqualByComparingTo(expected.paidAmount());
             assertThat(actual.getCanceledCouponAmount()).isEqualByComparingTo(expected.couponAmount());
             assertThat(actual.getCanceledPointAmount()).isEqualByComparingTo(expected.pointAmount());

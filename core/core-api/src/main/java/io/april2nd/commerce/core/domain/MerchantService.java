@@ -11,6 +11,6 @@ public class MerchantService {
     private final MerchantFinder merchantFinder;
 
     public List<Merchant> find(List<Long> merchantIds) {
-        return merchantFinder.findByIds(merchantIds);
+        return merchantFinder.find(merchantIds);
     }
 }

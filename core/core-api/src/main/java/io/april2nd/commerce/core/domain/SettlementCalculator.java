@@ -1,22 +1,17 @@
 package io.april2nd.commerce.core.domain;
 
-import lombok.Getter;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+@Component
 public class SettlementCalculator {
-
-    private static final BigDecimal FEE = BigDecimal.valueOf(0.1);
-
-    private SettlementCalculator() {
-        // Utility class
-    }
-
-    public static SettlementAmount calculate(BigDecimal amount) {
-        BigDecimal feeAmount = amount.multiply(FEE).setScale(2, RoundingMode.HALF_UP);
+    public SettlementAmount calculate(BigDecimal amount, BigDecimal recentSalesAmount) {
+        BigDecimal feeRate = SettlementFeePolicy.feeRate(recentSalesAmount);
+        BigDecimal feeAmount = amount.multiply(feeRate).setScale(2, RoundingMode.HALF_UP);
         BigDecimal settlementAmount = amount.subtract(feeAmount).setScale(2, RoundingMode.HALF_UP);
 
-        return new SettlementAmount(amount, feeAmount, FEE, settlementAmount);
+        return new SettlementAmount(amount, feeAmount, feeRate, settlementAmount);
     }
 }
